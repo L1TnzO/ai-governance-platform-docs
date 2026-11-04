@@ -999,7 +999,7 @@
       c.classList.toggle("active", c.getAttribute("data-slice") === id);
     });
     var s = SLICES.filter(function(x){ return x.id === id; })[0];
-    var total = Object.keys(P).length;
+    var total = Object.keys(P).length - 1; /* el interceptor de salida va dentro del pipe */
     says.innerHTML = s
       ? '<b>Slice ' + s.n + ' · ' + s.name + '.</b> Enciende ' + s.lights.length +
         ' piezas: ' + s.says
