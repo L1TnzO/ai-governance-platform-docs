@@ -59,6 +59,50 @@
   .sec-sub{color:var(--muted); font-size:14.5px; max-width:86ch; margin:8px 0 22px}
   .sec-sub b{color:var(--ink-2); font-weight:600}
 
+  /* ---------- journey ---------- */
+  .start{
+    display:flex; gap:16px; align-items:center; background:var(--surface);
+    border:1px dashed var(--line-2); border-radius:12px; padding:16px 20px; margin-bottom:14px;
+  }
+  .start .badge-start{
+    font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--line-2); border-radius:5px; padding:3px 8px; white-space:nowrap;
+  }
+  .start p{margin:0; font-size:14.5px; color:var(--ink-2)}
+  .start code{font-family:var(--mono); font-size:13px; background:var(--canvas); border:1px solid var(--line); border-radius:4px; padding:1px 5px}
+
+  ol.journey{list-style:none; margin:0; padding:0; counter-reset:step}
+  ol.journey > li{
+    position:relative; display:grid; grid-template-columns:56px 1fr; gap:20px;
+    padding:18px 0 18px; border-bottom:1px solid var(--line);
+  }
+  ol.journey > li:last-child{border-bottom:0}
+  ol.journey .n{
+    width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+    font-family:var(--mono); font-size:15px; font-weight:600;
+    background:var(--ink); color:#fff; margin-top:2px;
+  }
+  ol.journey li.stop .n{background:var(--red)}
+  ol.journey li.wait .n{background:var(--amber)}
+  ol.journey li.ok .n{background:var(--green)}
+  .j-title{font-size:17px; font-weight:650; margin:0 0 3px; letter-spacing:-.01em}
+  .j-why{font-size:14.5px; color:var(--ink-2); margin:0 0 10px}
+  .j-why b{font-weight:600; color:var(--ink)}
+  .j-meta{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  .svc{
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    background:var(--violet-bg); color:var(--violet); border:1px solid var(--violet-line);
+    border-radius:6px; padding:3px 9px; white-space:nowrap;
+  }
+  .q{
+    font-size:13px; color:var(--ink-2); background:var(--canvas); border:1px solid var(--line);
+    border-radius:6px; padding:3px 10px;
+  }
+  .q b{color:var(--ink); font-weight:600}
+  .tech{display:none; font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+  body.show-tech .tech{display:inline}
+
+
   /* ---------- figura: el diagrama de referencia ---------- */
   .diagram-fig{
     margin:0 0 26px; background:var(--surface); border:1px solid var(--line);
@@ -342,9 +386,133 @@
 <main>
 
 <!-- ======================= 1 · MAPA ======================= -->
+<section id="recorrido">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h2>El recorrido de una petición</h2></div>
+    <p class="sec-sub">
+      Seis pasos, en orden. Si alguien solo lee esto, ya sabe qué hace la plataforma. Cada paso nombra el servicio de AWS
+      que lo ejecuta —ahí está la diferencia entre un diagrama y un plano.
+    </p>
+
+    <div class="start">
+      <span class="badge-start">Punto de partida</span>
+      <p>
+        El agente ya existe y funciona (OpenAI SDK, LangChain, CrewAI, un script propio). Nadie toca su código:
+        solo cambia <code>BASE_URL</code> y la API key. Si además tiene un usuario detrás, reenvía su token en una cabecera.
+      </p>
+    </div>
+
+    <ol class="journey">
+      <li>
+        <div class="n">1</div>
+        <div>
+          <p class="j-title">La petición entra por la puerta de la empresa</p>
+          <p class="j-why" style="margin-bottom:6px">Nada llega directo al modelo. Todo pasa por un único punto de entrada HTTPS, donde se filtra el tráfico malicioso y se aplican límites de tasa.</p>
+          <div class="j-meta">
+            <span class="svc">AWS WAFv2</span>
+            <span class="svc">API Gateway REST</span>
+            <span class="q">Se cobra por <b>web ACL + reglas + millones de requests</b></span>
+          </div>
+          <span class="tech">Frontal con reglas administradas (IP Reputation, Common Rule Set) y rate limit por IP; TLS 1.3 en el endpoint regional.</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">2</div>
+        <div>
+          <p class="j-title">La puerta pregunta cinco cosas antes de dejar pasar</p>
+          <p class="j-why" style="margin-bottom:8px">Este es el corazón del sistema: un interceptor entra en el camino de la petición y responde cinco preguntas en milisegundos. Si alguna falla, la petición no llega al modelo.</p>
+          <div class="j-meta">
+            <span class="q">¿El agente <b>existe</b> y está activo?</span>
+            <span class="q">¿El usuario tiene un <b>token válido</b>?</span>
+            <span class="q">¿Le queda <b>presupuesto</b>?</span>
+            <span class="q">¿La <b>regla</b> permite esta acción?</span>
+            <span class="q">¿El prompt es un <b>ataque</b>?</span>
+          </div>
+          <div class="j-meta" style="margin-top:8px">
+            <span class="svc">AgentCore Gateway</span>
+            <span class="svc">Lambda · interceptor REQUEST</span>
+            <span class="svc">DynamoDB</span>
+            <span class="svc">Bedrock Guardrails</span>
+          </div>
+          <span class="tech">El Gateway delega la autorización al interceptor síncrono; el motor Cedar embebido evalúa con default-deny y forbid-beats-permit; los contadores de consumo viven en DynamoDB con caché en memoria de 30 s.</span>
+        </div>
+      </li>
+
+      <li class="stop">
+        <div class="n">3a</div>
+        <div>
+          <p class="j-title">Si la regla prohíbe: se bloquea, pero el agente no se cae</p>
+          <p class="j-why" style="margin-bottom:6px">La negativa vuelve <b>dentro del protocolo</b> que el agente ya entiende, con el motivo en lenguaje natural. Un software que no sabe nada de la plataforma sigue funcionando; y no se gasta ni un token del modelo.</p>
+          <div class="j-meta">
+            <span class="svc">Lambda · interceptor REQUEST</span>
+            <span class="q">Respuesta <b>403 / tool_call retirado + motivo</b></span>
+          </div>
+        </div>
+      </li>
+
+      <li class="wait">
+        <div class="n">3b</div>
+        <div>
+          <p class="j-title">Si la acción es crítica: se retiene y espera a una persona</p>
+          <p class="j-why" style="margin-bottom:6px">La operación queda <b>pendiente con un número de aprobación y un plazo</b>. Otra persona la autoriza y se re-ejecuta por la misma puerta —nunca por un atajo. El agente solo ve que la acción está en curso.</p>
+          <div class="j-meta">
+            <span class="svc">DynamoDB</span>
+            <span class="svc">Consola (CloudFront + S3)</span>
+            <span class="q">Aprobador <b>distinto</b> del solicitante</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="ok">
+        <div class="n">4</div>
+        <div>
+          <p class="j-title">Si todo está en orden: se ejecuta en el destino</p>
+          <p class="j-why" style="margin-bottom:6px">O se invoca un modelo autorizado de Bedrock, o se ejecuta una herramienta corporativa. <b>Las credenciales las inyecta la puerta</b>: el agente nunca guarda una contraseña productiva.</p>
+          <div class="j-meta">
+            <span class="svc">Amazon Bedrock</span>
+            <span class="svc">Targets MCP</span>
+            <span class="svc">Secrets Manager</span>
+            <span class="q">Cifrado con <b>KMS CMK</b></span>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">5</div>
+        <div>
+          <p class="j-title">La respuesta se revisa antes de salir</p>
+          <p class="j-why" style="margin-bottom:6px">Un segundo interceptor mira lo que vuelve: <b>enmascara datos personales</b> (RUT chileno validado con módulo 11, correos, teléfonos), bloquea llamadas a herramientas no permitidas y <b>anota el costo real</b> del turno.</p>
+          <div class="j-meta">
+            <span class="svc">Lambda · interceptor RESPONSE</span>
+            <span class="svc">Cedar embebido</span>
+            <span class="q">El prompt de entrada <b>viaja intacto</b></span>
+          </div>
+          <span class="tech">Modo buffered: acumula el stream SSE y lo re-emite ya enmascarado; la validación de RUT es aritmética local, sin llamadas externas.</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">6</div>
+        <div>
+          <p class="j-title">Quien decidió, cuánto costó y por qué queda registrado</p>
+          <p class="j-why" style="margin-bottom:6px">La evidencia se escribe <b>antes</b> de liberar la respuesta. Dos niveles: un índice caliente para ver el flujo en vivo y una copia inmutable para auditoría, que nadie puede borrar.</p>
+          <div class="j-meta">
+            <span class="svc">Amazon DynamoDB</span>
+            <span class="svc">Amazon S3 Object Lock</span>
+            <span class="q">Retención <b>GOVERNANCE</b></span>
+          </div>
+          <span class="tech">Escritura síncrona con KMS CMK; réplica asíncrona a S3 con Object Lock en modo GOVERNANCE, denegación explícita de s3:BypassGovernanceRetention.</span>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================= MAPA ======================= -->
 <section id="mapa">
   <div class="wrap">
-    <div class="sec-head"><span class="sec-num">01</span><h2>El mapa</h2></div>
+    <div class="sec-head"><span class="sec-num">02</span><h2>El mapa</h2></div>
     <p class="sec-sub">
       Una puerta con dos interceptores y servicios de apoyo colgando de ella.
       <b>La puerta no es el control</b>: es por donde pasa todo; los controles son los servicios que consulta.
@@ -630,7 +798,7 @@
 <!-- ======================= 2 · PLAN ======================= -->
 <section id="plan">
   <div class="wrap">
-    <div class="sec-head"><span class="sec-num">02</span><h2>El plan</h2></div>
+    <div class="sec-head"><span class="sec-num">03</span><h2>El plan</h2></div>
     <p class="sec-sub">
       Siete slices verticales: cada uno deja un sistema que funciona y se puede mostrar.
       Elige uno y el mapa se ilumina solo en las piezas que ese slice enciende.
@@ -658,7 +826,7 @@
 <!-- ======================= 3 · COSTOS ======================= -->
 <section id="costos">
   <div class="wrap">
-    <div class="sec-head"><span class="sec-num">03</span><h2>El costo</h2></div>
+    <div class="sec-head"><span class="sec-num">04</span><h2>El costo</h2></div>
     <p class="sec-sub">
       Un <b>turno</b> es una petición gobernada: 2 Lambdas, 1 llamada al Gateway, 1 escritura y 1 lectura en
       DynamoDB, 3 unidades de guardrail y 4 KB de evidencia. Precios on-demand de <em>us-east-1</em>, noviembre 2026.
