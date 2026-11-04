@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarjeta de gobernanza · atencion-clientes — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+
+  /* barra superior */
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  /* estructura */
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px}
+  .crumbs a{color:#5f6b7a;text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 6px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:74ch}
+  .page-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;padding-top:6px}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .pad{padding:20px 24px}
+  .sec{margin:26px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .sec h2{font-size:16px;font-weight:700;margin:0}
+  .sec p{margin:2px 0 0;font-size:13px;color:#5f6b7a}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:7px 18px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+
+  /* insignias de estado: siempre ícono + palabra */
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.35;padding:2px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-neutral{color:#5f6b7a;background:#f2f3f3;border-color:#e9ebed}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+  .ver{font-size:11px;font-weight:600;padding:1px 6px;border:1px solid #e9ebed;border-radius:4px;background:#f2f3f3;color:#5f6b7a}
+
+  /* cabecera del agente */
+  .agent-head{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;padding:18px 24px;margin-bottom:16px}
+  .agent-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .agent-id h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .agent-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 24px;margin:16px 0 0}
+  .agent-meta dt{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a;margin-bottom:1px}
+  .agent-meta dd{margin:0;font-size:13px}
+  .agent-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:190px}
+
+  /* cobertura */
+  .coverage{display:grid;grid-template-columns:210px minmax(0,1fr) 210px;gap:28px;align-items:center;padding:22px 24px;margin-bottom:6px}
+  .cov-num{display:flex;flex-direction:column}
+  .cov-pct{font-size:56px;font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .cov-cap{font-size:13px;color:#5f6b7a;margin-top:6px}
+  .bar-head{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#5f6b7a;margin-bottom:8px}
+  .bar{position:relative;height:12px;background:#e9ebed;border-radius:6px}
+  .bar-fill{height:100%;width:72%;background:#0972d3;border-radius:6px}
+  .bar-mark{position:absolute;top:-5px;bottom:-5px;left:89%;border-left:2px dashed #5f6b7a}
+  .bar-foot{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:12px;color:#5f6b7a}
+  .bar-foot b{color:#16191f;font-weight:600}
+  .cov-side{font-size:12px;color:#5f6b7a;border-left:1px solid #e9ebed;padding-left:22px}
+  .cov-side strong{display:block;font-size:15px;color:#16191f;font-weight:600;margin-bottom:2px}
+
+  /* conexiones */
+  .conn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+  .conn{display:flex;flex-direction:column;gap:0;padding:18px 20px 14px;background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .conn-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .conn-key{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:5px;background:#16191f;color:#fff;font-size:12px;font-weight:700;flex:none}
+  .conn-name{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;margin:0}
+  .state{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;line-height:1.35;padding:3px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .state .bico{font-size:11px}
+  .state.wrap{white-space:normal;text-align:left;border-radius:8px}
+  .conn-what{margin:0 0 12px;font-size:13px;color:#16191f}
+  .conn-what b{font-weight:600}
+  .conn-fact{margin:0;padding:10px 12px;background:#f2f3f3;border-radius:6px;font-size:12px;color:#5f6b7a}
+  .conn-fact b{color:#16191f;font-weight:600}
+  .conn-foot{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px}
+  .conn-foot .ids{font-size:11px;color:#5f6b7a;letter-spacing:.02em}
+
+  /* dos columnas */
+  .two-col{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;margin-top:14px}
+  .gaps{list-style:none;margin:14px 0 0;padding:0}
+  .gaps li{padding:14px 0;border-top:1px solid #e9ebed}
+  .gaps li:first-child{border-top:0;padding-top:4px}
+  .gap-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .gap-head h3{font-size:14px;font-weight:600;margin:0}
+  .gaps p{margin:4px 0 0;font-size:13px;color:#5f6b7a}
+  .tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .tools code{font-size:11px;background:#f2f3f3;border:1px solid #e9ebed;border-radius:4px;padding:1px 6px;color:#16191f}
+  .gap-act{margin-top:8px !important;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+  .gap-act .eyebrow{font-size:11px}
+
+  /* costo */
+  .cost{display:flex;flex-direction:column;gap:0;padding:20px 24px}
+  .cost-big{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-top:8px;font-variant-numeric:tabular-nums}
+  .cost-sub{font-size:13px;color:#5f6b7a;margin:2px 0 16px}
+  .cost-bar{height:8px;background:#e9ebed;border-radius:4px;overflow:hidden;margin-bottom:6px}
+  .cost-bar span{display:block;height:100%;width:82%;background:#b7791f;border-radius:4px}
+  .cost-line{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#5f6b7a}
+  .cost-foot{margin-top:auto;padding-top:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .coverage{grid-template-columns:1fr;gap:18px}
+    .cov-side{border-left:0;border-top:1px solid #e9ebed;padding-left:0;padding-top:14px;display:flex;gap:18px;flex-wrap:wrap}
+    .cov-side strong{font-size:13px}
+    .agent-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .two-col{grid-template-columns:1fr}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .agent-head{padding:16px 18px}
+    .agent-side{flex-direction:row;align-items:center;flex-wrap:wrap}
+    .coverage,.pad,.cost{padding:16px 18px}
+    .cov-pct{font-size:46px}
+    .bar-foot{gap:4px 14px}
+    .page-actions{padding-top:0}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="tarjeta-gobernanza.html" aria-current="page">Agentes</a>
+      <span class="nav-off" title="No forma parte de esta propuesta">Flujo en vivo</span>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MP</span>
+        <span>María Pérez <span class="u-role">· operadora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <a href="tarjeta-gobernanza.html">Agentes</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">atencion-clientes</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Qué controla la plataforma?</h1>
+      <p class="lede">Cobertura medida, no declarada.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn" href="#">Guía de conexión</a>
+      <a class="btn btn-primary" href="consumo-limites.html">Consumo y límites</a>
+    </div>
+  </div>
+
+  <section class="card agent-head" aria-labelledby="agent-name">
+    <div>
+      <div class="agent-id">
+        <h2 id="agent-name">atencion-clientes</h2>
+        <span class="ver">v1.4</span>
+        <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Activo</span>
+      </div>
+      <dl class="agent-meta">
+        <div><dt>Responsable</dt><dd>María Pérez</dd></div>
+        <div><dt>Preset</dt><dd>2 · Operación supervisada</dd></div>
+        <div><dt>En este modo</dt><dd>22 días · 2026-10-12</dd></div>
+        <div><dt>Última evidencia</dt><dd class="mono">2026-11-03 14:32:08 UTC</dd></div>
+      </dl>
+    </div>
+    <div class="agent-side">
+      <span class="eyebrow">Ventana evaluada</span>
+      <span class="tiny mono">2026-10-28 → 2026-11-03 · 7 días</span>
+      <a class="link" href="auditoria.html">Ver transacciones</a>
+    </div>
+  </section>
+
+  <section class="card coverage" aria-labelledby="cov-title">
+    <div class="cov-num">
+      <span class="cov-pct">72 %</span>
+      <span class="cov-cap" id="cov-title">de los controles del catálogo</span>
+    </div>
+    <div>
+      <div class="bar-head">
+        <span>Índice ponderado</span>
+        <span>máximo 89 %</span>
+      </div>
+      <div class="bar" role="img" aria-label="Índice de cobertura 72 por ciento; el máximo alcanzable es 89 por ciento">
+        <div class="bar-fill"></div>
+        <div class="bar-mark" aria-hidden="true"></div>
+      </div>
+      <div class="bar-foot">
+        <span><b>A</b> 11 de 27 controles</span>
+        <span><b>B</b> 4 de 7 tools por la puerta</span>
+        <span><b>C</b> 100 % de solicitudes con usuario</span>
+      </div>
+    </div>
+    <div class="cov-side">
+      <strong>89 % es el techo</strong>
+      <p style="margin:0">3 fuera del perímetro: red e IAM, autenticación de entrada y aviso de IA.</p>
+      <p style="margin:8px 0 0"><a class="link" href="#">Ver los 27 controles</a></p>
+    </div>
+  </section>
+
+  <div class="sec">
+    <div>
+      <h2>Conexiones</h2>
+    </div>
+    <span class="chip">A + B parcial + C</span>
+  </div>
+
+  <div class="conn-grid">
+    <article class="conn" aria-labelledby="conn-a">
+      <div class="conn-top">
+        <h3 class="conn-name" id="conn-a"><span class="conn-key" aria-hidden="true">A</span> Inferencia por la puerta</h3>
+        <span class="state b-ok"><span class="bico" aria-hidden="true">✓</span>Conectada</span>
+      </div>
+      <p class="conn-what"><b>Qué habilita:</b> ver pedidos, respuestas e intenciones de tools.</p>
+      <p class="conn-fact"><b>1.284 solicitudes</b> · <span class="mono">agent_token</span> válido 100 %</p>
+      <div class="conn-foot">
+        <span class="ids">CTRL-01 a CTRL-11</span>
+        <a class="link" href="#">Conectar →</a>
+      </div>
+    </article>
+
+    <article class="conn" aria-labelledby="conn-b">
+      <div class="conn-top">
+        <h3 class="conn-name" id="conn-b"><span class="conn-key" aria-hidden="true">B</span> Tools por MCP</h3>
+        <span class="state b-warn wrap"><span class="bico" aria-hidden="true">⚠</span><span><b>Parcial</b> · 4 de 7 tools por la puerta</span></span>
+      </div>
+      <p class="conn-what"><b>Qué habilita:</b> gobernar cada tool: aprobación, credenciales y reglas.</p>
+      <p class="conn-fact"><b>5 tools</b> dentro del agente: solo la intención, no el resultado.</p>
+      <div class="conn-foot">
+        <span class="ids">CTRL-12 a CTRL-18 · B al 44 %</span>
+        <a class="link" href="#">Conectar →</a>
+      </div>
+    </article>
+
+    <article class="conn" aria-labelledby="conn-c">
+      <div class="conn-top">
+        <h3 class="conn-name" id="conn-c"><span class="conn-key" aria-hidden="true">C</span> Identidad del usuario</h3>
+        <span class="state b-ok"><span class="bico" aria-hidden="true">✓</span>Conectada</span>
+      </div>
+      <p class="conn-what"><b>Qué habilita:</b> atribuir cada pedido a una persona y aplicar reglas.</p>
+      <p class="conn-fact"><b>100 %</b> con token de usuario verificado · 0 como <span class="mono">solo_workload</span></p>
+      <div class="conn-foot">
+        <span class="ids">CTRL-19 a CTRL-22</span>
+        <a class="link" href="#">Conectar →</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="two-col">
+    <section class="card pad" aria-labelledby="gaps-title">
+      <div class="sec" style="margin:0">
+        <div>
+          <h2 id="gaps-title">Lo que falta</h2>
+          <p>Tres huecos, 17 puntos. Los cierra B.</p>
+        </div>
+      </div>
+
+      <ul class="gaps">
+        <li>
+          <div class="gap-head">
+            <h3>5 tools sin clasificar</h3>
+            <span class="chip">Conexión B</span>
+          </div>
+          <p>Dentro del agente, sin clasificar ni reglar; por MCP quedan bajo el Preset. Las 4 que pasan: <span class="mono">consultar_saldo</span>, <span class="mono">consultar_movimientos</span>, <span class="mono">cambiar_fondo</span>, <span class="mono">actualizar_datos</span>.</p>
+          <div class="tools" aria-label="Tools sin clasificar">
+            <code>anular_reserva</code><code>emitir_certificado</code><code>consultar_deuda</code><code>ajustar_tarifa</code><code>enviar_correo</code>
+          </div>
+          <p class="gap-act"><span class="eyebrow">Se activa con</span> Conexión B · paso 2</p>
+        </li>
+        <li>
+          <div class="gap-head">
+            <h3>Sin supervisión humana</h3>
+            <span class="chip">Conexión B</span>
+          </div>
+          <p>Sin B, <span class="mono">requiere_aprobacion</span> solo bloquea: sin bandeja ni ejecución posterior.</p>
+          <p class="gap-act"><span class="eyebrow">Se activa con</span> Conexión B · CTRL-16</p>
+        </li>
+        <li>
+          <div class="gap-head">
+            <h3>Sin regla de monto</h3>
+            <span class="chip">Conexión B</span>
+          </div>
+          <p><span class="mono">descuento ≤ 10</span> existe; falta la de monto para <span class="mono">cambiar_fondo</span>. Sin B no se evalúan los parámetros.</p>
+          <p class="gap-act"><span class="eyebrow">Se activa con</span> Conexión B · CTRL-14</p>
+        </li>
+      </ul>
+    </section>
+
+    <aside class="card cost" aria-labelledby="cost-title">
+      <span class="eyebrow">Costo del período</span>
+      <p class="cost-big" id="cost-title">$ 41,20</p>
+      <p class="cost-sub">este mes · 1.284 turnos</p>
+
+      <div class="cost-bar" role="img" aria-label="82 por ciento del presupuesto mensual de 50 dólares consumido"><span></span></div>
+      <div class="cost-line"><span>82 % de $ 50,00</span><span>faltan $ 8,80</span></div>
+
+      <div class="cost-foot">
+        <span class="chip">Bloqueo al 100 %</span>
+        <a class="link" href="consumo-limites.html">Ver consumo →</a>
+        <span class="tiny" style="color:#5f6b7a">Medido 2026-11-01 00:00 → 2026-11-03 14:33 UTC</span>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Maqueta · datos sintéticos de Morris y Opazo.</span>
+    <span>2026-11-03 · horas UTC</span>
+  </footer>
+</main>
+</body>
+</html>

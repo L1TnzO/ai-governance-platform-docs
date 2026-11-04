@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identidad del usuario · atencion-clientes — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+
+  /* barra superior */
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .topbar-in > .brand,.topbar-in > .topbar-right{min-height:56px}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  /* estructura */
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px;flex-wrap:wrap}
+  .crumbs a{color:#5f6b7a;text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 6px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:76ch}
+  .page-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;padding-top:6px}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .pad{padding:20px 24px}
+  .sec{margin:26px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .sec h2{font-size:16px;font-weight:700;margin:0}
+  .sec p{margin:2px 0 0;font-size:13px;color:#5f6b7a}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:7px 18px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+
+  /* insignias: siempre ícono + palabra */
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.35;padding:2px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-neutral{color:#5f6b7a;background:#f2f3f3;border-color:#e9ebed}
+  .b-info{color:#045bb0;background:#f0f7fd;border-color:#c9e0f5}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+  .ver{font-size:11px;font-weight:600;padding:1px 6px;border:1px solid #e9ebed;border-radius:4px;background:#f2f3f3;color:#5f6b7a}
+
+  /* agente en contexto */
+  .agent-head{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:16px 22px;margin-bottom:16px}
+  .agent-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .agent-id h2{font-size:18px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .agent-facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .agent-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:200px}
+
+  /* aviso de política */
+  .policy{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border:1px solid #c9e0f5;background:#f0f7fd;border-radius:8px;margin-bottom:16px}
+  .policy .pico{font-size:15px;line-height:1.3;color:#045bb0}
+  .policy p{margin:0;font-size:13px;color:#16191f;max-width:104ch}
+  .policy p b{font-weight:600}
+  .policy .psub{margin-top:3px;font-size:12px;color:#5f6b7a}
+
+  /* comparación */
+  .compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+  .actor{display:flex;flex-direction:column;background:#fff;border:1px solid #e9ebed;border-radius:8px;padding:18px 20px 16px;border-top:3px solid #0972d3}
+  .actor.is-masked{border-top-color:#f2cd54}
+  .actor-top{display:flex;align-items:flex-start;gap:11px;flex-wrap:wrap}
+  .ava{width:34px;height:34px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:12px;font-weight:700;display:grid;place-items:center;flex:none}
+  .actor-name{min-width:0;flex:1}
+  .actor-name h2{font-size:15px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .actor-role{margin:1px 0 0;font-size:12px;color:#5f6b7a}
+  .turn{margin-top:14px}
+  .q{margin:4px 0 0;padding:10px 13px;background:#f2f3f3;border-radius:8px;font-size:14px;color:#16191f}
+  .answer{margin-top:14px;padding-top:13px;border-top:1px solid #e9ebed;flex:1}
+  .ans-lede{margin:4px 0 12px;font-size:13px}
+  .ans-lede b{font-weight:700}
+  .fields{margin:0;display:flex;flex-direction:column;gap:0}
+  .fields > div{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:7px 0;border-top:1px solid #f2f3f3}
+  .fields > div:first-child{border-top:0}
+  .fields dt{font-size:12px;color:#5f6b7a;white-space:nowrap}
+  .fields dd{margin:0;font-size:13px;text-align:right;word-break:break-word}
+  .redact{display:inline-block;padding:0 6px;border:1px dashed #c2c7ce;border-radius:4px;background:#f2f3f3;color:#5f6b7a;letter-spacing:.06em}
+  .exposed,.hidden-note{display:flex;align-items:flex-start;gap:6px;margin:12px 0 0;font-size:12px;line-height:1.45}
+  .exposed{color:#1d8102}
+  .hidden-note{color:#8d6605}
+  .exposed .bico,.hidden-note .bico{font-size:11px;margin-top:2px}
+  .actor-foot{margin-top:14px;padding-top:12px;border-top:1px solid #e9ebed;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+  .actor-foot .ids{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+  /* franja de la regla */
+  .ruleband{display:grid;grid-template-columns:280px minmax(0,1fr);gap:26px;align-items:start;margin-top:16px;padding:18px 22px;background:#fff;border:1px solid #e9ebed;border-left:3px solid #0972d3;border-radius:8px}
+  .rb-quote p{margin:3px 0 0;font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+  .rb-body p{margin:0;font-size:13px;color:#16191f;max-width:96ch}
+  .rb-body p b{font-weight:600}
+  .rb-cite{margin-top:6px !important;font-size:11px;color:#5f6b7a}
+
+  /* cobertura */
+  .coverage{display:grid;grid-template-columns:230px minmax(0,1fr) 230px;gap:28px;align-items:center;padding:22px 24px;margin-top:16px}
+  .cov-num{display:flex;flex-direction:column}
+  .cov-pct{font-size:54px;font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .cov-cap{font-size:13px;color:#5f6b7a;margin-top:6px}
+  .bar-head{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#5f6b7a;margin-bottom:8px;flex-wrap:wrap}
+  .bar-head b{color:#16191f;font-weight:600}
+  .bar{position:relative;height:12px;background:#e9ebed;border-radius:6px}
+  .bar-fill{height:100%;width:100%;background:#0972d3;border-radius:6px}
+  .bar-foot{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:12px;color:#5f6b7a}
+  .bar-foot b{color:#16191f;font-weight:600}
+  .cov-side{font-size:12px;color:#5f6b7a;border-left:1px solid #e9ebed;padding-left:22px}
+  .cov-side strong{display:block;font-size:15px;color:#16191f;font-weight:600;margin-bottom:2px}
+
+  /* roles */
+  .roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px}
+  .role{background:#fff;border:1px solid #e9ebed;border-radius:8px;padding:16px 18px}
+  .role-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:2px}
+  .role-key{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:5px;background:#16191f;color:#fff;font-size:11px;font-weight:700;flex:none}
+  .role h3{font-size:14px;font-weight:700;margin:0}
+  .role .who-s{margin:0 0 10px;font-size:12px;color:#5f6b7a}
+  .role ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+  .role li{display:flex;gap:7px;font-size:12px;line-height:1.45;color:#16191f}
+  .role li .ico{flex:none;width:12px;font-size:11px;line-height:1.5}
+  .ico-yes{color:#1d8102}
+  .ico-no{color:#b02a1c}
+  .ico-mid{color:#8d6605}
+
+  /* nota desatendida */
+  .note{display:flex;align-items:flex-start;gap:12px;margin-top:16px;padding:14px 18px;background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .note .nico{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f2f3f3;border:1px solid #c2c7ce;color:#5f6b7a;font-size:12px;font-weight:700;flex:none}
+  .note p{margin:0;font-size:13px;color:#16191f}
+  .note p b{font-weight:600}
+  .note .nsub{margin-top:3px;font-size:12px;color:#5f6b7a}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .topbar-in > .brand,.topbar-in > .topbar-right{min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .coverage{grid-template-columns:1fr;gap:18px}
+    .cov-side{border-left:0;border-top:1px solid #e9ebed;padding-left:0;padding-top:14px;display:flex;gap:18px;flex-wrap:wrap}
+    .cov-side strong{font-size:13px}
+    .ruleband{grid-template-columns:1fr;gap:10px}
+    .roles{grid-template-columns:1fr}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .compare{grid-template-columns:1fr}
+    .agent-head{padding:16px 18px}
+    .agent-side{align-items:flex-start}
+    .coverage,.pad{padding:16px 18px}
+    .cov-pct{font-size:44px}
+    .page-actions{padding-top:0}
+    .actor{padding:16px 16px 14px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="tarjeta-gobernanza.html" aria-current="page">Agentes</a>
+      <span class="nav-off" title="No forma parte de esta propuesta">Flujo en vivo</span>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MP</span>
+        <span>María Pérez <span class="u-role">· operadora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <a href="tarjeta-gobernanza.html">Agentes</a>
+    <span aria-hidden="true">/</span>
+    <a href="tarjeta-gobernanza.html">atencion-clientes</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Identidad del usuario</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Quién pidió cada acción?</h1>
+      <p class="lede">Usuario verificado en la puerta por la conexión C. Misma pregunta, distinta respuesta según el rol.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn" href="tarjeta-gobernanza.html">Ver la conexión C</a>
+      <a class="btn btn-primary" href="auditoria.html">Abrir auditoría</a>
+    </div>
+  </div>
+
+  <section class="card agent-head" aria-labelledby="agent-name">
+    <div>
+      <div class="agent-id">
+        <h2 id="agent-name">atencion-clientes</h2>
+        <span class="ver">v1.4</span>
+        <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Activo</span>
+      </div>
+      <div class="agent-facts">
+        <span class="chip">Conexión C · conectada</span>
+        <span class="chip">Preset 2 · Operación supervisada</span>
+        <span class="chip mono">2026-10-28 → 2026-11-03</span>
+      </div>
+    </div>
+    <div class="agent-side">
+      <span class="eyebrow">Solicitudes</span>
+      <span class="tiny mono">1.284 · 0 sin usuario</span>
+      <a class="link" href="tarjeta-gobernanza.html">Volver a la tarjeta</a>
+    </div>
+  </section>
+
+  <div class="policy" role="note">
+    <span class="pico" aria-hidden="true">⚖</span>
+    <div>
+      <p><b>La identidad se verifica en la puerta, no en la conversación.</b></p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div>
+      <h2>Misma pregunta, dos usuarios</h2>
+    </div>
+  </div>
+
+  <div class="compare">
+
+    <article class="actor" aria-labelledby="who-bruno">
+      <div class="actor-top">
+        <span class="ava" aria-hidden="true">BC</span>
+        <div class="actor-name">
+          <h2 id="who-bruno">Bruno Contreras</h2>
+          <p class="actor-role">rol operador · permiso <span class="mono">pii_access</span></p>
+        </div>
+        <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Datos completos</span>
+      </div>
+
+      <div class="turn">
+        <span class="eyebrow">Pregunta · 14:29:51 UTC</span>
+        <p class="q">¿Cuál es el saldo del cliente 0042-1?</p>
+      </div>
+
+      <div class="answer">
+        <span class="eyebrow">Respuesta</span>
+        <p class="ans-lede">Saldo <b>$ 1.842.300</b> · Titular: Valentina Rojas Medina.</p>
+        <dl class="fields">
+          <div><dt>RUT</dt><dd class="mono">12.345.678-5</dd></div>
+          <div><dt>Teléfono</dt><dd class="mono">+56 9 1234 5678</dd></div>
+          <div><dt>Saldo</dt><dd class="mono">$ 1.842.300</dd></div>
+        </dl>
+        <p class="exposed"><span class="bico" aria-hidden="true">✓</span><span><span class="mono">pii_access</span> · dato visible</span></p>
+      </div>
+
+      <div class="actor-foot">
+        <span class="ids">
+          <span class="chip mono">tr-8f21</span>
+          <span class="chip">token verificado</span>
+        </span>
+        <a class="link" href="auditoria.html">Ver transacción</a>
+      </div>
+    </article>
+
+    <article class="actor is-masked" aria-labelledby="who-camila">
+      <div class="actor-top">
+        <span class="ava" aria-hidden="true">CR</span>
+        <div class="actor-name">
+          <h2 id="who-camila">Camila Rojas</h2>
+          <p class="actor-role">rol consulta · auditora · sin permiso <span class="mono">pii_access</span></p>
+        </div>
+        <span class="badge b-warn"><span class="bico" aria-hidden="true">⚠</span>Enmascarada</span>
+      </div>
+
+      <div class="turn">
+        <span class="eyebrow">Pregunta · 14:33:07 UTC</span>
+        <p class="q">¿Cuál es el saldo del cliente 0042-1?</p>
+      </div>
+
+      <div class="answer">
+        <span class="eyebrow">Respuesta</span>
+        <p class="ans-lede">Saldo <b>$ 1.842.300</b> · Titular: Valentina Rojas M.</p>
+        <dl class="fields">
+          <div><dt>RUT</dt><dd class="mono"><span class="redact">**.***.***-*</span></dd></div>
+          <div><dt>Teléfono</dt><dd class="mono"><span class="redact">+56 * **** ****</span></dd></div>
+          <div><dt>Saldo</dt><dd class="mono">$ 1.842.300</dd></div>
+        </dl>
+        <p class="hidden-note"><span class="bico" aria-hidden="true">⚠</span><span>Sin <span class="mono">pii_access</span> · enmascarado</span></p>
+      </div>
+
+      <div class="actor-foot">
+        <span class="ids">
+          <span class="chip mono">tr-a117</span>
+          <span class="chip">token verificado</span>
+        </span>
+        <a class="link" href="auditoria.html">Ver transacción</a>
+      </div>
+    </article>
+
+  </div>
+
+  <section class="ruleband" aria-labelledby="rule-title">
+    <div class="rb-quote">
+      <span class="eyebrow">Regla aplicada</span>
+      <p id="rule-title">El rol decide qué se ve</p>
+    </div>
+    <div class="rb-body">
+      <p><b>R-04 · minimización por rol.</b> Solo los campos que el rol puede ver, recortados en la puerta antes del modelo.</p>
+      <p class="rb-cite mono">CTRL-20 · regla pii_access · Preset 2 · v3 · vigente desde 2026-10-12</p>
+    </div>
+  </section>
+
+  <section class="card coverage" aria-labelledby="cov-title">
+    <div class="cov-num">
+      <span class="cov-pct">100 %</span>
+      <span class="cov-cap" id="cov-title">de solicitudes con usuario verificado</span>
+    </div>
+    <div>
+      <div class="bar-head">
+        <span><b>100 % verificadas</b></span>
+        <span>1.284 de 1.284</span>
+      </div>
+      <div class="bar" role="img" aria-label="100 por ciento de las solicitudes llegaron con usuario verificado: 1.284 de 1.284">
+        <div class="bar-fill"></div>
+      </div>
+      <div class="bar-foot">
+        <span><b>0</b> como <span class="mono">solo_workload</span></span>
+        <span><b>0</b> tokens ausentes</span>
+        <span><b>4</b> personas</span>
+        <span>7 días</span>
+      </div>
+    </div>
+    <div class="cov-side">
+      <strong>Qué se midió</strong>
+      <p style="margin:0">Token válido y firma del emisor sobre el total recibido.</p>
+      <p style="margin:8px 0 0"><a class="link" href="tarjeta-gobernanza.html">Detalle de la conexión C →</a></p>
+    </div>
+  </section>
+
+  <div class="sec">
+    <div>
+      <h2>Los tres roles</h2>
+      <p>El permiso es por rol, no por persona.</p>
+    </div>
+    <span class="chip">3 roles</span>
+  </div>
+
+  <div class="roles">
+    <section class="role" aria-labelledby="role-op">
+      <div class="role-top">
+        <span class="role-key" aria-hidden="true">OP</span>
+        <h3 id="role-op">Operador</h3>
+      </div>
+      <p class="who-s">María Pérez, Diego Ruiz, Bruno Contreras</p>
+      <ul>
+        <li><span class="ico ico-yes" aria-hidden="true">✓</span><span>Saldos y movimientos de su cartera.</span></li>
+        <li><span class="ico ico-yes" aria-hidden="true">✓</span><span>RUT y teléfono completos con <span class="mono">pii_access</span>.</span></li>
+        <li><span class="ico ico-no" aria-hidden="true">✕</span><span>No aprueba lo que originó él mismo.</span></li>
+      </ul>
+    </section>
+
+    <section class="role" aria-labelledby="role-ap">
+      <div class="role-top">
+        <span class="role-key" aria-hidden="true">AP</span>
+        <h3 id="role-ap">Aprobador</h3>
+      </div>
+      <p class="who-s">Elena Soto</p>
+      <ul>
+        <li><span class="ico ico-yes" aria-hidden="true">✓</span><span>Resuelve lo retenido por la puerta.</span></li>
+        <li><span class="ico ico-yes" aria-hidden="true">✓</span><span>Dato completo de lo que debe decidir.</span></li>
+        <li><span class="ico ico-no" aria-hidden="true">✕</span><span>No ejecuta tools ni aprueba lo que originó.</span></li>
+      </ul>
+    </section>
+
+    <section class="role" aria-labelledby="role-au">
+      <div class="role-top">
+        <span class="role-key" aria-hidden="true">AU</span>
+        <h3 id="role-au">Auditor</h3>
+      </div>
+      <p class="who-s">Camila Rojas · rol consulta (auditora)</p>
+      <ul>
+        <li><span class="ico ico-yes" aria-hidden="true">✓</span><span>Evidencia sellada y ruta forense completa.</span></li>
+        <li><span class="ico ico-mid" aria-hidden="true">⚠</span><span>Datos personales enmascarados, salvo justificación registrada.</span></li>
+        <li><span class="ico ico-no" aria-hidden="true">✕</span><span>No ejecuta tools ni decide aprobaciones.</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="note" role="note">
+    <span class="nico" aria-hidden="true">i</span>
+    <div>
+      <p><b>Sin usuario, opera como tarea desatendida: no se rompe nada.</b></p>
+      <p class="nsub">Queda como <span class="mono">solo_workload</span> y pierde todo acceso a datos personales. En la ventana no hubo ninguna.</p>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>Maqueta · datos sintéticos de Morris y Opazo. Ninguna cifra es de un sistema en operación.</span>
+    <span>2026-11-03 · todas las horas en UTC</span>
+  </footer>
+</main>
+</body>
+</html>

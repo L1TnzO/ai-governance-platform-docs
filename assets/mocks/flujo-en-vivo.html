@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo en vivo — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+
+  /* barra superior */
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .topbar-in > .brand,.topbar-in > .topbar-right{min-height:56px}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  /* estructura */
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 4px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:76ch}
+  .page-head .live{display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#1d8102;font-weight:600}
+  .page-head .live .dot{width:8px;height:8px;border-radius:50%;background:#1d8102;flex:none}
+  .page-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;padding-top:4px}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px;background:none;border:0;padding:0;font-family:inherit;cursor:pointer;color:#0972d3}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:7px 16px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+
+  /* insignias: siempre ícono + palabra */
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.3;padding:2px 8px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-deny{color:#b02a1c;background:#fdf3f2;border-color:#f5cdc7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-info{color:#045bb0;background:#f0f7fd;border-color:#c9e0f5}
+  .b-gray{color:#5f6b7a;background:#f2f3f3;border-color:#c2c7ce}
+  .b-violet{color:#6b3fa0;background:#f6f1fc;border-color:#d8c8ef}
+  .b-orange{color:#8a4b08;background:#fdf3e7;border-color:#f0c893}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+
+  /* filtros */
+  .filters{padding:16px 20px 14px;margin-bottom:14px}
+  .f-top{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a}
+  .field select{font:inherit;font-size:13px;color:#16191f;background:#fff;border:1px solid #c2c7ce;border-radius:6px;padding:6px 10px;min-height:34px;min-width:208px;max-width:100%}
+  .field select:focus{border-color:#0972d3;outline:2px solid #c9e0f5;outline-offset:0}
+  .f-top .spacer{margin-left:auto}
+  .f-top .f-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:1px}
+  .f-sep{height:1px;background:#e9ebed;margin:14px 0 12px}
+  .f-row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .f-row + .f-row{margin-top:10px}
+  .f-row .f-lab{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a;padding-top:6px;min-width:58px}
+  .opts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .opt{display:inline-flex;align-items:center;gap:6px;font-size:12px;line-height:1.3;padding:3px 9px 3px 7px;border:1px solid #e9ebed;border-radius:12px;background:#fafbfb;color:#16191f;cursor:pointer;white-space:nowrap}
+  .opt:hover{border-color:#c2c7ce;background:#f2f3f3}
+  .opt input{width:14px;height:14px;margin:0;flex:none;cursor:pointer;accent-color:#0972d3}
+  .opt:has(input:checked){border-color:#c9e0f5;background:#f0f7fd}
+  .opt .sw{width:7px;height:7px;border-radius:50%;flex:none}
+  .sw-ok{background:#1d8102}
+  .sw-violet{background:#6b3fa0}
+  .sw-deny{background:#b02a1c}
+  .sw-warn{background:#b7791f}
+  .sw-orange{background:#c2620a}
+  .sw-info{background:#0972d3}
+  .sw-gray{background:#8d959f}
+
+  /* tabla de eventos */
+  .tbl-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid #e9ebed}
+  .tbl-head h2{font-size:15px;font-weight:700;margin:0}
+  .tbl-head p{margin:2px 0 0;font-size:12px;color:#5f6b7a}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+  thead th{background:#f2f3f3;color:#5f6b7a;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:8px 8px;border-bottom:1px solid #e9ebed;white-space:nowrap;vertical-align:bottom}
+  thead th:first-child{padding-left:16px}
+  thead th:last-child{padding-right:16px}
+  tbody td{padding:11px 8px;border-bottom:1px solid #e9ebed;vertical-align:top;line-height:1.35}
+  tbody td:first-child{padding-left:16px}
+  tbody td:last-child{padding-right:16px}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafbfb}
+  tbody tr.is-deny:hover{background:#fbf1ef}
+  tbody tr.is-deny td{background:#fdf7f6}
+  tbody tr.is-deny:hover td{background:#fbf1ef}
+  tbody tr.is-deny td:first-child{box-shadow:inset 3px 0 0 #e39b90}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .t-time{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}
+  .t-date{display:block;font-size:10px;color:#5f6b7a;font-weight:400;margin-top:1px;letter-spacing:0}
+  .t-agent{font-size:11.5px;font-weight:600;overflow-wrap:anywhere}
+  .t-agent .sub{display:block;font-size:10px;color:#5f6b7a;font-weight:400;margin-top:1px}
+  .t-user{font-size:11.5px;overflow-wrap:anywhere}
+  .t-user .sub{display:block;font-size:10px;color:#5f6b7a;margin-top:1px}
+  .t-user.none{color:#5f6b7a;font-style:italic}
+  .t-chan{font-size:11.5px}
+  .t-chan .sub{display:block;font-size:10px;color:#5f6b7a;margin-top:1px}
+  .t-model{font-size:10.5px;overflow-wrap:anywhere;line-height:1.4}
+  .t-model.none{color:#5f6b7a;font-style:italic}
+  .t-badge .badge{font-size:11px;padding:2px 7px;white-space:normal;text-align:left}
+  .t-what{font-size:11.5px;line-height:1.4;color:#16191f;overflow-wrap:anywhere}
+  .t-what b{font-weight:600}
+  .t-what .lead{font-weight:700}
+  .lead.ok{color:#1d8102}
+  .lead.deny{color:#b02a1c}
+  .lead.violet{color:#6b3fa0}
+  .lead.info{color:#045bb0}
+  .lead.warn{color:#8d6605}
+  .lead.orange{color:#8a4b08}
+  .t-what .rule{display:block;font-size:10.5px;color:#5f6b7a;margin-top:3px}
+  .t-what code{font-size:10.5px;background:#f2f3f3;border:1px solid #e9ebed;border-radius:3px;padding:0 3px;color:#16191f;overflow-wrap:anywhere}
+  .t-cx{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+  .pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;line-height:1.25;padding:1px 5px;border-radius:3px;white-space:nowrap}
+  .pill.yes{color:#045bb0;background:#f0f7fd;border:1px solid #0972d3}
+  .pill.no{color:#6b7280;background:#fff;border:1px dashed #b6bcc4}
+  .t-cost{font-size:11px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .t-cost .sub{display:block;font-size:10px;color:#5f6b7a;font-weight:400;margin-top:1px}
+  .t-copy{font-size:10.5px;display:flex;align-items:flex-start;gap:4px;line-height:1.35}
+  .t-copy .cico{color:#1d8102;font-size:10px;line-height:1.4;flex:none}
+  .t-copy .sub{display:block;font-size:10px;color:#5f6b7a}
+
+  .tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid #e9ebed;background:#fafbfb;border-radius:0 0 8px 8px;font-size:12px;color:#5f6b7a}
+  .tbl-foot b{color:#16191f;font-weight:600}
+
+  .note{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;font-size:12px;color:#5f6b7a;max-width:104ch}
+  .note .nico{color:#5f6b7a;font-size:13px;line-height:1.4;flex:none}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1180px){
+    .tablewrap{overflow-x:auto}
+    table{min-width:1120px}
+  }
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .topbar-in > .brand,.topbar-in > .topbar-right{min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .f-top .f-actions{width:100%;padding-bottom:0}
+    .field select{min-width:0;width:100%}
+    .field{flex:1 1 210px}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .filters{padding:14px 16px}
+    .tbl-head{padding:12px 16px}
+    thead th:first-child,tbody td:first-child{padding-left:16px}
+    .page-actions{padding-top:0}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="agentes.html">Agentes</a>
+      <a href="flujo-en-vivo.html" aria-current="page">Flujo en vivo</a>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MP</span>
+        <span>María Pérez <span class="u-role">· operadora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <span aria-current="page">Flujo en vivo</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Qué está pasando ahora?</h1>
+      <span class="live"><span class="dot" aria-hidden="true"></span>En vivo · 04:04:12 UTC</span>
+    </div>
+    <div class="page-actions">
+      <a class="btn" href="auditoria.html">Abrir auditoría</a>
+    </div>
+  </div>
+
+  <section class="card filters" aria-labelledby="filters-title">
+    <h2 id="filters-title" class="eyebrow" style="margin:0 0 10px">Filtros</h2>
+
+    <div class="f-top">
+      <div class="field">
+        <label for="f-agent">Agente</label>
+        <select id="f-agent">
+          <option>Todos</option>
+          <option>atencion-clientes</option>
+          <option>analisis-financiero</option>
+          <option>operaciones-batch</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-user">Usuario</label>
+        <select id="f-user">
+          <option>Todos</option>
+          <option>m.perez</option>
+          <option>d.ruiz</option>
+          <option>e.soto</option>
+          <option>b.contreras</option>
+          <option>c.rojas</option>
+          <option>sin usuario</option>
+        </select>
+      </div>
+      <div class="spacer" aria-hidden="true"></div>
+      <div class="f-actions">
+        <button class="btn" type="button" id="btn-pause"><span aria-hidden="true">⏸</span> Pausar</button>
+        <button class="link" type="button" id="btn-clear">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="f-sep" role="presentation"></div>
+
+    <div class="f-row">
+      <span class="f-lab" id="lab-estado">Estado</span>
+      <div class="opts" role="group" aria-labelledby="lab-estado">
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-ok" aria-hidden="true"></span>Permitido</label>
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-violet" aria-hidden="true"></span>En sombra</label>
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-deny" aria-hidden="true"></span>Denegado</label>
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-warn" aria-hidden="true"></span>Filtrado</label>
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-orange" aria-hidden="true"></span>Limitado</label>
+        <label class="opt"><input type="checkbox" checked><span class="sw sw-info" aria-hidden="true"></span>Pendiente</label>
+        <label class="opt"><input type="checkbox"><span class="sw sw-gray" aria-hidden="true"></span>Fuera de la puerta</label>
+        <label class="opt"><input type="checkbox"><span class="sw sw-gray" aria-hidden="true"></span>Sin evidencia</label>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <span class="f-lab" id="lab-canal">Canal</span>
+      <div class="opts" role="group" aria-labelledby="lab-canal">
+        <label class="opt"><input type="checkbox" checked>Inferencia</label>
+        <label class="opt"><input type="checkbox" checked>MCP</label>
+      </div>
+      <span class="chip" style="margin-left:auto">6 eventos · 2026-11-03 14:19 → 14:22</span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="tbl-title">
+    <div class="tbl-head">
+      <div>
+        <h2 id="tbl-title">Eventos</h2>
+      </div>
+      <span class="chip"><span aria-hidden="true">🔒</span>6 de 6 sellados</span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <colgroup>
+          <col style="width:7.2%">
+          <col style="width:12.4%">
+          <col style="width:9.2%">
+          <col style="width:5.8%">
+          <col style="width:7.4%">
+          <col style="width:9.2%">
+          <col style="width:24.6%">
+          <col style="width:11.6%">
+          <col style="width:6.4%">
+          <col style="width:6.2%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Hora (UTC)</th>
+            <th scope="col">Agente</th>
+            <th scope="col">Usuario</th>
+            <th scope="col">Canal</th>
+            <th scope="col">Modelo</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Qué pasó</th>
+            <th scope="col">Conexiones</th>
+            <th scope="col" class="num">Costo</th>
+            <th scope="col">Copia</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="t-time">14:22:08</span></td>
+            <td><span class="t-agent">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="t-user">b.contreras<span class="sub">operador</span></span></td>
+            <td><span class="t-chan">Inferencia<span class="sub">A</span></span></td>
+            <td><span class="t-model">claude-3-5-sonnet</span></td>
+            <td class="t-badge"><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitido</span></td>
+            <td class="t-what"><span class="lead ok">Permitido</span> · Bruno (operador) puede <code>actualizar_precio</code> con descuento 8<span class="rule">regla descuento ≤ 10</span></td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill no">B ausente</span>
+                <span class="pill yes">C presente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0031</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+
+          <tr class="is-deny">
+            <td><span class="t-time">14:21:44</span></td>
+            <td><span class="t-agent">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="t-user none">sin usuario</span></td>
+            <td><span class="t-chan">Inferencia<span class="sub">A</span></span></td>
+            <td><span class="t-model none">—</span></td>
+            <td class="t-badge"><span class="badge b-deny"><span class="bico" aria-hidden="true">⊘</span>Denegado · rol</span></td>
+            <td class="t-what"><span class="lead deny">Denegado</span> · el agente sin usuario no puede usar <code>eliminar_registro</code><span class="rule">tool destructiva (Preset 2)</span></td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill no">B ausente</span>
+                <span class="pill no">C ausente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0000</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+
+          <tr>
+            <td><span class="t-time">14:21:02</span></td>
+            <td><span class="t-agent">analisis-financiero<span class="sub">v0.9</span></span></td>
+            <td><span class="t-user">m.perez<span class="sub">operador</span></span></td>
+            <td><span class="t-chan">Inferencia<span class="sub">A</span></span></td>
+            <td><span class="t-model">claude-3-5-sonnet</span></td>
+            <td class="t-badge"><span class="badge b-violet"><span class="bico" aria-hidden="true">👁</span>En sombra</span></td>
+            <td class="t-what"><span class="lead violet">En sombra</span> · en modo activo se habría denegado <code>transferir_fondos</code><span class="rule">(monto 12000 &gt; 5000)</span></td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill no">B ausente</span>
+                <span class="pill yes">C presente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0028</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+
+          <tr>
+            <td><span class="t-time">14:20:31</span></td>
+            <td><span class="t-agent">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="t-user">e.soto<span class="sub">aprobador</span></span></td>
+            <td><span class="t-chan">MCP<span class="sub">B</span></span></td>
+            <td><span class="t-model none">—</span></td>
+            <td class="t-badge"><span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>Pendiente</span></td>
+            <td class="t-what"><span class="lead info">Pendiente</span> · Elena tiene 14 min para aprobar <code>cambiar_fondo</code> pedido por Diego</td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill yes">B presente</span>
+                <span class="pill yes">C presente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0012</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+
+          <tr>
+            <td><span class="t-time">14:19:58</span></td>
+            <td><span class="t-agent">analisis-financiero<span class="sub">v0.9</span></span></td>
+            <td><span class="t-user none">sin usuario</span></td>
+            <td><span class="t-chan">Inferencia<span class="sub">A</span></span></td>
+            <td><span class="t-model none">—</span></td>
+            <td class="t-badge"><span class="badge b-warn"><span class="bico" aria-hidden="true">▽</span>Filtrado</span></td>
+            <td class="t-what"><span class="lead warn">Filtrado</span> · intento de jailbreak bloqueado en el turno del usuario</td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill no">B ausente</span>
+                <span class="pill no">C ausente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0000</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+
+          <tr>
+            <td><span class="t-time">14:19:12</span></td>
+            <td><span class="t-agent">operaciones-batch<span class="sub">v2.0</span></span></td>
+            <td><span class="t-user none">sin usuario</span></td>
+            <td><span class="t-chan">Inferencia<span class="sub">A</span></span></td>
+            <td><span class="t-model none">—</span></td>
+            <td class="t-badge"><span class="badge b-orange"><span class="bico" aria-hidden="true">⏲</span>Limitado</span></td>
+            <td class="t-what"><span class="lead orange">Limitado</span> · presupuesto al 92 % · contrapresión HTTP 429<span class="rule">(Retry-After 30 s)</span></td>
+            <td>
+              <div class="t-cx">
+                <span class="pill yes">A presente</span>
+                <span class="pill no">B ausente</span>
+                <span class="pill no">C ausente</span>
+              </div>
+            </td>
+            <td class="t-cost">US$ 0.0000</td>
+            <td class="t-copy"><span class="cico" aria-hidden="true">✓</span><span>Confirmada</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-foot">
+      <span><b>4 copias confirmadas</b> de 6</span>
+      <a class="link" href="auditoria.html">Evidencia →</a>
+    </div>
+  </section>
+
+  <p class="note">
+    <span class="nico" aria-hidden="true">ⓘ</span>
+    <span>A inferencia · B tools · C usuario.</span>
+  </p>
+
+  <div class="foot">
+    <span>Morris y Opazo</span>
+    <span class="mono">UTC · cifras estimadas · tarifa vigente</span>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) { return; }
+    if (t.closest('a[href="#"]')) { e.preventDefault(); return; }
+    var pause = t.closest('#btn-pause');
+    if (pause) {
+      var pausado = pause.getAttribute('data-paused') === 'true';
+      pause.setAttribute('data-paused', pausado ? 'false' : 'true');
+      pause.innerHTML = pausado ? '<span aria-hidden="true">⏸</span> Pausar' : '<span aria-hidden="true">▶</span> Reanudar';
+      return;
+    }
+    if (t.closest('#btn-clear')) {
+      var boxes = document.querySelectorAll('.filters input[type="checkbox"]');
+      for (var i = 0; i < boxes.length; i++) { boxes[i].checked = i < 6 || i === 8 || i === 9; }
+      document.getElementById('f-agent').selectedIndex = 0;
+      document.getElementById('f-user').selectedIndex = 0;
+    }
+  });
+</script>
+</body>
+</html>

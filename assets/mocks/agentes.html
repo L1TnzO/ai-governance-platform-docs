@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentes — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+
+  /* barra superior */
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .topbar-in > .brand,.topbar-in > .topbar-right{min-height:56px}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  /* estructura */
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px}
+  .crumbs a{color:#5f6b7a;text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 6px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:74ch}
+  .page-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;padding-top:4px}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .pad{padding:20px 24px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:8px 20px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+
+  /* insignias: siempre ícono + palabra */
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.35;padding:2px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-deny{color:#b02a1c;background:#fdf3f2;border-color:#f5cdc7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-info{color:#045bb0;background:#f0f7fd;border-color:#c9e0f5}
+  .b-gray{color:#5f6b7a;background:#f2f3f3;border-color:#c2c7ce}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+
+  /* cabecera de la tabla */
+  .tbl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 20px 12px;border-bottom:1px solid #e9ebed}
+  .tbl-head h2{font-size:15px;font-weight:700;margin:0}
+  .tbl-head p{margin:2px 0 0;font-size:12px;color:#5f6b7a;max-width:92ch}
+
+  /* tabla */
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+  caption{caption-side:top;text-align:left;padding:10px 20px 0;font-size:12px;color:#5f6b7a}
+  thead th{background:#f2f3f3;color:#5f6b7a;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:8px 12px;border-bottom:1px solid #e9ebed;border-top:1px solid #e9ebed;white-space:nowrap}
+  tbody td{padding:12px 12px;border-bottom:1px solid #e9ebed;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafbfb}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .agent-link{font-size:13.5px;font-weight:600;color:#0972d3;text-decoration:underline;text-underline-offset:2px}
+  .cell-sub{display:block;font-size:11px;color:#5f6b7a;margin-top:2px;line-height:1.35}
+  .cell-sub .mono{font-size:11px}
+
+  /* conexiones */
+  .cxrow{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .cx{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;line-height:1.3;padding:1px 6px;border:1px solid #0972d3;border-radius:4px;color:#045bb0;background:#f0f7fd;white-space:nowrap}
+  .cx.part{border:1px dashed #b7791f;color:#8d6605;background:#fff7d6}
+  .cxsub{display:block;font-size:11px;color:#5f6b7a;margin-top:4px}
+
+  /* cobertura */
+  .cov-cell{display:flex;flex-direction:column;gap:5px;max-width:118px}
+  .cov-top{display:flex;align-items:baseline;gap:6px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .cbar{height:6px;background:#e9ebed;border-radius:3px;overflow:hidden}
+  .cbar span{display:block;height:100%;background:#0972d3;border-radius:3px}
+  .cov-sub{font-size:11px;color:#5f6b7a}
+
+  /* alertas */
+  .alert-cell .badge{white-space:normal;text-align:left;border-radius:8px;align-items:flex-start;font-size:11.5px;line-height:1.3}
+  .alert-cell .badge .bico{margin-top:1px}
+
+  /* resumen */
+  .tally{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fafbfb;border-top:1px solid #e9ebed;border-radius:0 0 8px 8px}
+  .tally > div{padding:14px 20px;border-left:1px solid #e9ebed;display:flex;flex-direction:column;gap:2px}
+  .tally > div:first-child{border-left:0}
+  .tally .n{font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2;font-variant-numeric:tabular-nums}
+  .tally .k{font-size:12px;color:#5f6b7a}
+
+  /* nota al pie */
+  .note{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;font-size:12px;color:#5f6b7a;max-width:104ch}
+  .note .nico{color:#5f6b7a;font-size:13px;line-height:1.4;flex:none}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .topbar-in > .brand,.topbar-in > .topbar-right{min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .tablewrap{overflow-x:auto}
+    table{min-width:900px}
+    .tally{grid-template-columns:1fr}
+    .tally > div{border-left:0;border-top:1px solid #e9ebed}
+    .tally > div:first-child{border-top:0}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .tbl-head,.pad{padding:14px 16px 10px}
+    caption{padding:10px 16px 0}
+    .page-actions{padding-top:0}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="agentes.html" aria-current="page">Agentes</a>
+      <a href="flujo-en-vivo.html">Flujo en vivo</a>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MP</span>
+        <span>María Pérez <span class="u-role">· operadora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <span aria-current="page">Agentes</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Qué agentes tengo?</h1>
+      <p class="lede">Modo, cobertura y costo: calculados desde la evidencia, no declarados.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="#"><span aria-hidden="true">+</span> Dar de alta</a>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="tbl-title">
+    <div class="tbl-head">
+      <div>
+        <h2 id="tbl-title">Catálogo</h2>
+        <p>Cobertura sobre controles; costo sobre consumo.</p>
+      </div>
+      <span class="chip mono">2026-11-01 → 2026-11-30</span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <caption>Al 2026-11-04 04:04:12 UTC.</caption>
+        <colgroup>
+          <col style="width:27%">
+          <col style="width:13%">
+          <col style="width:15%">
+          <col style="width:18%">
+          <col style="width:11%">
+          <col style="width:16%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Modo</th>
+            <th scope="col">Conexiones</th>
+            <th scope="col">Cobertura</th>
+            <th scope="col" class="num">Costo del mes</th>
+            <th scope="col">Alertas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a class="agent-link" href="#">atencion-clientes</a>
+              <span class="cell-sub"><span class="mono">v1.4</span> · Preset 2 · María Pérez</span>
+            </td>
+            <td><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Activo</span></td>
+            <td>
+              <div class="cxrow"><span class="cx">A</span><span class="cx part">B parcial</span><span class="cx">C</span></div>
+              <span class="cxsub">B · 4 de 7 tools</span>
+            </td>
+            <td>
+              <div class="cov-cell">
+                <span class="cov-top">72 %</span>
+                <div class="cbar" role="img" aria-label="Cobertura 72 por ciento"><span style="width:72%"></span></div>
+                <span class="cov-sub">máx. 89 %</span>
+              </div>
+            </td>
+            <td class="num mono">$ 41,20</td>
+            <td class="alert-cell"><span class="badge b-warn"><span class="bico" aria-hidden="true">⚠</span>2 tools sin clasificar</span></td>
+          </tr>
+          <tr>
+            <td>
+              <a class="agent-link" href="#">analisis-financiero</a>
+              <span class="cell-sub"><span class="mono">v0.9</span> · Preset 1 · Diego Ruiz</span>
+            </td>
+            <td><span class="badge b-info"><span class="bico" aria-hidden="true">👁</span>Descubrimiento</span></td>
+            <td>
+              <div class="cxrow"><span class="cx">A</span><span class="cx">C</span></div>
+              <span class="cxsub">B ausente</span>
+            </td>
+            <td>
+              <div class="cov-cell">
+                <span class="cov-top">54 %</span>
+                <div class="cbar" role="img" aria-label="Cobertura 54 por ciento"><span style="width:54%"></span></div>
+                <span class="cov-sub">máx. 89 %</span>
+              </div>
+            </td>
+            <td class="num mono">$ 18,60</td>
+            <td class="alert-cell"><span class="badge b-warn"><span class="bico" aria-hidden="true">⚠</span>Presupuesto al 82 %</span></td>
+          </tr>
+          <tr>
+            <td>
+              <a class="agent-link" href="#">operaciones-batch</a>
+              <span class="cell-sub"><span class="mono">v2.0</span> · Preset 3 · Elena Soto</span>
+            </td>
+            <td><span class="badge b-deny"><span class="bico" aria-hidden="true">⊘</span>Suspendido</span></td>
+            <td>
+              <div class="cxrow"><span class="cx">A</span></div>
+              <span class="cxsub">B y C ausentes</span>
+            </td>
+            <td>
+              <div class="cov-cell">
+                <span class="cov-top">31 %</span>
+                <div class="cbar" role="img" aria-label="Cobertura 31 por ciento"><span style="width:31%"></span></div>
+                <span class="cov-sub">sin ventana</span>
+              </div>
+            </td>
+            <td class="num mono">$ 0,00</td>
+            <td class="alert-cell"><span class="badge b-gray"><span class="bico" aria-hidden="true">⊘</span>Fuera de servicio</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tally">
+      <div>
+        <span class="n">3 agentes</span>
+        <span class="k">1 activo · 1 descubrimiento · 1 suspendido</span>
+      </div>
+      <div>
+        <span class="n">1 con control activo</span>
+        <span class="k">atencion-clientes</span>
+      </div>
+      <div>
+        <span class="n">$ 59,80</span>
+        <span class="k">medido · noviembre 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <p class="note">
+    <span class="nico" aria-hidden="true">ⓘ</span>
+    <span>A, B y C se miden; lo ausente queda como hueco.</span>
+  </p>
+
+  <div class="foot">
+    <span>Morris y Opazo</span>
+    <span class="mono">cifras estimadas · tarifa vigente</span>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href="#"]') : null;
+    if (a) { e.preventDefault(); }
+  });
+</script>
+</body>
+</html>

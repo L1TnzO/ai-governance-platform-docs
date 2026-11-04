@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools por la puerta · atencion-clientes — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+
+  /* barra superior */
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .topbar-in > .brand,.topbar-in > .topbar-right{min-height:56px}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  /* estructura */
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px;flex-wrap:wrap}
+  .crumbs a{color:#5f6b7a;text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 6px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:76ch}
+  .page-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;padding-top:6px}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .pad{padding:20px 24px}
+  .sec{margin:26px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .sec h2{font-size:16px;font-weight:700;margin:0}
+  .sec p{margin:2px 0 0;font-size:13px;color:#5f6b7a}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:7px 18px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+  .btn-sm{padding:5px 14px;font-size:12px}
+
+  /* insignias: siempre ícono + palabra */
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.35;padding:2px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-deny{color:#b02a1c;background:#fdf3f2;border-color:#f5cdc7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-info{color:#045bb0;background:#f0f7fd;border-color:#c9e0f5}
+  .b-gray{color:#5f6b7a;background:#f2f3f3;border-color:#c2c7ce}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+  .ver{font-size:11px;font-weight:600;padding:1px 6px;border:1px solid #e9ebed;border-radius:4px;background:#f2f3f3;color:#5f6b7a}
+
+  /* agente en contexto */
+  .agent-head{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:16px 22px;margin-bottom:16px}
+  .agent-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .agent-id h2{font-size:18px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .agent-facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .agent-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:210px}
+
+  /* contador */
+  .count-band{display:grid;grid-template-columns:250px minmax(0,1fr) 230px;gap:28px;align-items:center;padding:20px 24px;margin-bottom:16px}
+  .cnt-num{display:flex;flex-direction:column}
+  .cnt-big{font-size:44px;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .cnt-big small{font-size:20px;font-weight:600;color:#5f6b7a;letter-spacing:-.01em}
+  .cnt-cap{font-size:13px;color:#5f6b7a;margin-top:6px}
+  .seg{display:flex;gap:3px;height:12px;margin-bottom:8px}
+  .seg span{height:100%;border-radius:2px;background:#0972d3}
+  .seg span:first-child{border-radius:6px 2px 2px 6px}
+  .seg span:last-child{border-radius:2px 6px 6px 2px;background:#c2c7ce}
+  .seg span.out{background:#e9ebed;box-shadow:inset 0 0 0 1px #d5d9dd}
+  .seg-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:#5f6b7a}
+  .seg-legend b{color:#16191f;font-weight:600}
+  .cnt-side{font-size:12px;color:#5f6b7a;border-left:1px solid #e9ebed;padding-left:22px}
+  .cnt-side strong{display:block;font-size:14px;color:#16191f;font-weight:600;margin-bottom:2px}
+
+  /* advertencia ámbar */
+  .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border:1px solid #f2cd54;background:#fff7d6;border-radius:8px;margin-bottom:16px}
+  .alert .aico{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f2cd54;color:#5b4403;font-size:12px;font-weight:700;flex:none}
+  .alert p{margin:0;font-size:13px;color:#6b5a20;max-width:104ch}
+  .alert p b{color:#5b4403;font-weight:700}
+  .alert .asub{margin-top:3px;font-size:12px;color:#6b5a20}
+
+  /* tabla */
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  caption{text-align:left;padding:0 0 10px;font-size:12px;color:#5f6b7a}
+  thead th{background:#f2f3f3;color:#5f6b7a;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:9px 16px;border-bottom:1px solid #e9ebed;white-space:nowrap}
+  tbody td{padding:11px 16px;border-bottom:1px solid #e9ebed;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafbfb}
+  .tool-name{font-size:13px;font-weight:600;white-space:nowrap}
+  .tool-sub{display:block;font-size:11px;color:#5f6b7a;font-weight:400;margin-top:1px}
+  .cls{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#16191f;white-space:nowrap}
+  .cls i{width:7px;height:7px;border-radius:50%;background:#5f6b7a;flex:none}
+  .cls.c-read i{background:#0972d3}
+  .cls.c-write i{background:#b7791f}
+  .cls.c-destroy i{background:#b02a1c}
+  .cls.c-none i{background:#c2c7ce}
+  .gate{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap}
+  .gate.yes{color:#1d8102}
+  .gate.no{color:#5f6b7a}
+  .rule-txt{font-size:12px;color:#16191f}
+  .rule-txt.none{color:#5f6b7a}
+  tbody tr.is-deny td{background:#fdf7f6}
+  tbody tr.is-deny:hover td{background:#fbf1ef}
+  tbody tr.is-deny .tool-name{color:#8f2317}
+  tbody tr.is-out td{background:#fbfbfb}
+  tbody tr.is-out .tool-name{color:#5f6b7a;font-weight:600}
+  tbody tr.is-out td:first-child{box-shadow:inset 3px 0 0 #d5d9dd}
+
+  /* panel constructor de reglas */
+  .builder{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start;margin-top:16px}
+  .bld-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid #e9ebed}
+  .bld-head h2{font-size:16px;font-weight:700;margin:0}
+  .bld-head p{margin:3px 0 0;font-size:12px;color:#5f6b7a}
+  .bld-body{padding:18px 22px 20px}
+  .bld-row{display:grid;grid-template-columns:96px 180px minmax(0,1fr);gap:12px;align-items:end}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a}
+  .field select,.field input{font:inherit;font-size:13px;color:#16191f;background:#fff;border:1px solid #c2c7ce;border-radius:6px;padding:7px 10px;min-height:34px;width:100%}
+  .field .unit{font-size:12px;color:#5f6b7a;white-space:nowrap;padding-bottom:8px}
+  .cond{display:flex;gap:10px;align-items:flex-end}
+  .cond .field{flex:1}
+
+  .preview{margin-top:16px;border:1px solid #e9ebed;border-radius:8px;background:#fafbfb;overflow:hidden}
+  .pv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #e9ebed;background:#fff}
+  .pv-head .eyebrow{font-size:11px}
+  .pv-body{padding:14px 16px}
+  .pv-formal{margin:0;font-size:13px;font-weight:700;letter-spacing:.01em;color:#16191f}
+  .pv-plain{margin:4px 0 0;font-size:13px;color:#16191f}
+  .pv-plain b{font-weight:600}
+  .pv-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid #e9ebed;font-size:12px;color:#5f6b7a}
+  .bld-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid #e9ebed}
+  .bld-actions .hint{font-size:12px;color:#5f6b7a}
+
+  /* riel */
+  .rail{display:flex;flex-direction:column;gap:14px}
+  .rail h2{font-size:13px;font-weight:700;margin:0 0 8px}
+  .rail p{margin:0;font-size:12px;color:#5f6b7a}
+  .facts{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .facts li{display:flex;gap:9px;font-size:12px;color:#5f6b7a;line-height:1.45}
+  .facts .fico{font-size:12px;line-height:1.5;flex:none;color:#16191f}
+  .facts b{color:#16191f;font-weight:600}
+  .hist{list-style:none;margin:6px 0 0;padding:0}
+  .hist li{padding:8px 0;border-top:1px solid #e9ebed;font-size:12px;color:#5f6b7a}
+  .hist li:first-child{border-top:0;padding-top:0}
+  .hist .h-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .hist .h-top b{font-size:12px;color:#16191f;font-weight:600}
+  .hist .h-time{font-size:11px;white-space:nowrap}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .topbar-in > .brand,.topbar-in > .topbar-right{min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .count-band{grid-template-columns:1fr;gap:18px}
+    .cnt-side{border-left:0;border-top:1px solid #e9ebed;padding-left:0;padding-top:14px}
+    .builder{grid-template-columns:1fr}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .agent-head{padding:16px 18px}
+    .agent-side{align-items:flex-start}
+    .pad,.count-band{padding:16px 18px}
+    .cnt-big{font-size:36px}
+    .page-actions{padding-top:0}
+    .bld-row{grid-template-columns:1fr;gap:10px}
+    .cond{flex-wrap:wrap}
+    .bld-head,.bld-body{padding:16px 18px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="tarjeta-gobernanza.html" aria-current="page">Agentes</a>
+      <span class="nav-off" title="No forma parte de esta propuesta">Flujo en vivo</span>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MP</span>
+        <span>María Pérez <span class="u-role">· operadora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <a href="tarjeta-gobernanza.html">Agentes</a>
+    <span aria-hidden="true">/</span>
+    <a href="tarjeta-gobernanza.html">atencion-clientes</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Tools por la puerta</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Qué puede hacer este agente?</h1>
+      <p class="lede">Cada tool se clasifica y se rige por una regla. Fuera de la puerta no hay cobertura.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn" href="tarjeta-gobernanza.html">Ver la tarjeta del agente</a>
+      <a class="btn btn-primary" href="aprobaciones.html">Revisar pendientes</a>
+    </div>
+  </div>
+
+  <section class="card agent-head" aria-labelledby="agent-name">
+    <div>
+      <div class="agent-id">
+        <h2 id="agent-name">atencion-clientes</h2>
+        <span class="ver">v1.4</span>
+        <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Activo</span>
+      </div>
+      <div class="agent-facts">
+        <span class="chip">Conexión B · parcial</span>
+        <span class="chip">Preset 2 · Operación supervisada</span>
+        <span class="chip mono">2026-10-28 → 2026-11-03</span>
+      </div>
+    </div>
+    <div class="agent-side">
+      <span class="eyebrow">Clasificación</span>
+      <span class="tiny mono">8 declaradas · 2026-11-01</span>
+    </div>
+  </section>
+
+  <section class="card count-band" aria-labelledby="cnt-title">
+    <div class="cnt-num">
+      <span class="cnt-big">4 de 7</span>
+      <span class="cnt-cap" id="cnt-title">tools por la puerta</span>
+    </div>
+    <div>
+      <div class="seg" role="img" aria-label="4 de 7 tools por la puerta con una regla aplicada; las otras 3 no tienen regla">
+        <span style="width:14.28%"></span>
+        <span style="width:14.28%"></span>
+        <span style="width:14.28%"></span>
+        <span style="width:14.28%"></span>
+        <span style="width:14.28%" class="out"></span>
+        <span style="width:14.28%" class="out"></span>
+        <span style="width:14.28%" class="out"></span>
+      </div>
+      <div class="seg-legend">
+        <span><b>4</b> con regla</span>
+        <span><b>3</b> sin regla</span>
+      </div>
+    </div>
+    <div class="cnt-side">
+      <strong>Cómo se lee</strong>
+      <p style="margin:0">7 de 8 tocan datos de cliente; <span class="mono">emitir_certificado</span> no llega a la puerta y se cuenta igual.</p>
+    </div>
+  </section>
+
+  <div class="alert" role="note">
+    <span class="aico" aria-hidden="true">⚠</span>
+    <div>
+      <p><b>Sin la conexión de identidad, las escrituras se denegarán hasta conectarla.</b></p>
+      <p class="asub">Condición por defecto, no alerta de hoy: con C nada se bloquea. Sin C seguiría leyendo; <span class="mono">actualizar_datos</span>, <span class="mono">cambiar_fondo</span> y <span class="mono">pagar_tarjeta</span> se bloquearían.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div>
+      <h2>Tools declaradas</h2>
+      <p>Clase asignada por la plataforma; regla evaluada en la puerta.</p>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>3 permitidas</span>
+      <span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>2 pendientes</span>
+      <span class="badge b-deny"><span class="bico" aria-hidden="true">✕</span>1 denegada</span>
+      <span class="badge b-gray"><span class="bico" aria-hidden="true">⊘</span>2 fuera de la puerta</span>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="tbl-title">
+    <div style="padding:16px 20px 0">
+      <h2 id="tbl-title" class="tiny" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a;margin:0 0 2px">Registro de clasificación</h2>
+      <p style="margin:0;font-size:12px;color:#5f6b7a">2026-10-28 → 2026-11-03 · 14:33 UTC</p>
+    </div>
+    <div class="tablewrap" style="padding-top:10px">
+      <table>
+        <caption>8 tools declaradas.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Tool</th>
+            <th scope="col">Clase</th>
+            <th scope="col">¿Pasa por la puerta?</th>
+            <th scope="col">Regla aplicada</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tool-name mono">consultar_saldo</span><span class="tool-sub">cuenta</span></td>
+            <td><span class="cls c-read"><i aria-hidden="true"></i>lectura</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt none">ninguna</td>
+            <td><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitida</span></td>
+          </tr>
+          <tr>
+            <td><span class="tool-name mono">consultar_movimientos</span><span class="tool-sub">cartola</span></td>
+            <td><span class="cls c-read"><i aria-hidden="true"></i>lectura</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt none">ninguna</td>
+            <td><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitida</span></td>
+          </tr>
+          <tr>
+            <td><span class="tool-name mono">actualizar_datos</span><span class="tool-sub">contacto</span></td>
+            <td><span class="cls c-write"><i aria-hidden="true"></i>escritura</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt">descuento ≤ 10</td>
+            <td><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitida</span></td>
+          </tr>
+          <tr>
+            <td><span class="tool-name mono">cambiar_fondo</span><span class="tool-sub">inversión</span></td>
+            <td><span class="cls c-write"><i aria-hidden="true"></i>escritura</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt">monto &gt; 10.000 → aprobación</td>
+            <td><span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>Pendiente</span></td>
+          </tr>
+          <tr>
+            <td><span class="tool-name mono">pagar_tarjeta</span><span class="tool-sub">pago</span></td>
+            <td><span class="cls c-write"><i aria-hidden="true"></i>escritura</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt">requiere aprobación</td>
+            <td><span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>Pendiente</span></td>
+          </tr>
+          <tr class="is-deny">
+            <td><span class="tool-name mono">eliminar_registro</span><span class="tool-sub">permanente</span></td>
+            <td><span class="cls c-destroy"><i aria-hidden="true"></i>destructiva</span></td>
+            <td><span class="gate yes"><span aria-hidden="true">✓</span>Sí</span></td>
+            <td class="rule-txt">prohibida (Preset 2)</td>
+            <td><span class="badge b-deny"><span class="bico" aria-hidden="true">✕</span>Denegada</span></td>
+          </tr>
+          <tr class="is-out">
+            <td><span class="tool-name mono">emitir_certificado</span><span class="tool-sub">documento</span></td>
+            <td><span class="cls c-none"><i aria-hidden="true"></i>sin clasificar</span></td>
+            <td><span class="gate no"><span aria-hidden="true">✕</span>NO</span></td>
+            <td class="rule-txt none">ninguna</td>
+            <td><span class="badge b-gray"><span class="bico" aria-hidden="true">⊘</span>Fuera de la puerta</span></td>
+          </tr>
+          <tr class="is-out">
+            <td><span class="tool-name mono">enviar_correo</span><span class="tool-sub">cliente</span></td>
+            <td><span class="cls c-none"><i aria-hidden="true"></i>sin clasificar</span></td>
+            <td><span class="gate no"><span aria-hidden="true">✕</span>NO</span></td>
+            <td class="rule-txt none">ninguna</td>
+            <td><span class="badge b-gray"><span class="bico" aria-hidden="true">⊘</span>Fuera de la puerta</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid #e9ebed;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:#5f6b7a">
+      <span><b style="color:#16191f;font-weight:600">4 de 7</b> tools por la puerta con regla. <span class="mono">emitir_certificado</span> y <span class="mono">enviar_correo</span> corren dentro del agente: no hay resultado visible.</span>
+      <a class="link" href="tarjeta-gobernanza.html">Cerrar el hueco →</a>
+    </div>
+  </section>
+
+  <div class="sec">
+    <div>
+      <h2>Reglas del agente</h2>
+      <p>Se escriben una vez y se evalúan en cada ejecución; con versión y motivo.</p>
+    </div>
+    <span class="chip">reglas · v3 · Preset 2</span>
+  </div>
+
+  <div class="builder">
+    <section class="card" aria-labelledby="bld-title">
+      <div class="bld-head">
+        <div>
+          <h2 id="bld-title">Constructor de reglas</h2>
+          <p>Borrador sobre <span class="mono">cambiar_fondo</span> · 2 reglas activas.</p>
+        </div>
+        <span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>Borrador sin guardar</span>
+      </div>
+
+      <div class="bld-body">
+        <div class="bld-row">
+          <div class="field">
+            <label for="r-acc">Acción</label>
+            <select id="r-acc"><option>DENEGAR</option><option>APROBAR</option><option>PERMITIR</option></select>
+          </div>
+          <div class="field">
+            <label for="r-when">Cuándo</label>
+            <select id="r-when"><option>monto</option><option>descuento</option><option>antigüedad</option></select>
+          </div>
+          <div class="cond">
+            <div class="field">
+              <label for="r-op">Comparación</label>
+              <select id="r-op"><option>mayor que</option><option>menor que</option><option>igual a</option></select>
+            </div>
+            <div class="field">
+              <label for="r-val">Umbral</label>
+              <input id="r-val" type="text" value="10.000" class="mono" inputmode="numeric">
+            </div>
+            <span class="unit">USD</span>
+          </div>
+        </div>
+
+        <div class="preview" aria-live="polite">
+          <div class="pv-head">
+            <span class="eyebrow">Vista previa</span>
+          </div>
+          <div class="pv-body">
+            <p class="pv-formal mono">DENEGAR si monto &gt; 10.000</p>
+            <p class="pv-plain"><b>En simple:</b> sobre $ 10.000, retenida para aprobación humana.</p>
+            <div class="pv-foot">
+              <span>Afecta a <span class="mono">cambiar_fondo</span> y <span class="mono">pagar_tarjeta</span> · sin excepción por rol</span>
+              <span class="mono">CTRL-14</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bld-actions">
+          <button class="btn btn-primary" type="button">Crear regla</button>
+          <a class="link" href="#tbl-title">Ver las reglas activas</a>
+          <span class="hint">Queda con versión nueva y autor registrado.</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail" aria-label="Contexto de las reglas">
+      <section class="card pad">
+        <h2>Qué hace cada clase</h2>
+        <ul class="facts">
+          <li><span class="fico" aria-hidden="true">✓</span><span><b>Lectura</b> · sin regla, queda registrada.</span></li>
+          <li><span class="fico" aria-hidden="true">⚠</span><span><b>Escritura</b> · regla, y aprobación según monto.</span></li>
+          <li><span class="fico" aria-hidden="true">✕</span><span><b>Destructiva</b> · prohibida en Preset 2.</span></li>
+          <li><span class="fico" aria-hidden="true">⊘</span><span><b>Sin clasificar</b> · corre dentro del agente, sin regla.</span></li>
+        </ul>
+      </section>
+
+      <section class="card pad">
+        <h2>Reglas vigentes</h2>
+        <ul class="hist">
+          <li>
+            <div class="h-top"><b class="mono">cambiar_fondo &gt; 10.000</b><span class="h-time">v3</span></div>
+            <span>Aprobación requerida · María Pérez</span>
+          </li>
+          <li>
+            <div class="h-top"><b class="mono">descuento ≤ 10</b><span class="h-time">v3</span></div>
+            <span>Hasta 10 % · Diego Ruiz</span>
+          </li>
+          <li>
+            <div class="h-top"><b class="mono">eliminar_registro</b><span class="h-time">Preset 2</span></div>
+            <span>Prohibida por preset · no editable</span>
+          </li>
+        </ul>
+        <p style="margin-top:10px"><a class="link" href="auditoria.html">Ver historial →</a></p>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Maqueta · datos sintéticos de Morris y Opazo. Ninguna cifra proviene de un sistema en operación.</span>
+    <span>2026-11-03 · todas las horas en UTC</span>
+  </footer>
+</main>
+</body>
+</html>

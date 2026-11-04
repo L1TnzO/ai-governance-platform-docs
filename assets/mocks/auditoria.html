@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría — Gobernanza de agentes</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#f2f3f3;color:#16191f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:#0972d3}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid #0972d3;outline-offset:2px;border-radius:2px}
+  .skip{position:absolute;left:-9999px;background:#fff}
+  .skip:focus{left:16px;top:8px;background:#fff;border:1px solid #0972d3;border-radius:8px;padding:8px 12px;z-index:60}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-ligatures:none}
+  .tiny{font-size:11px}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  .topbar{background:#fff;border-bottom:1px solid #e9ebed;position:sticky;top:0;z-index:30}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:0 32px;min-height:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .topbar-in > .brand,.topbar-in > .topbar-right{min-height:56px}
+  .brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .brand svg{display:block}
+  .nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  .nav a,.nav .nav-off{font-size:13px;color:#5f6b7a;text-decoration:none;padding:17px 10px 15px;border-bottom:2px solid transparent;white-space:nowrap}
+  .nav a:hover{color:#16191f;background:#f2f3f3}
+  .nav a[aria-current="page"]{color:#16191f;font-weight:600;border-bottom-color:#0972d3}
+  .nav .nav-off{color:#6b7280;border-bottom-style:dotted;border-bottom-color:#c2c7ce}
+  .topbar-right{display:flex;align-items:center;gap:12px;padding-left:14px;border-left:1px solid #e9ebed}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#e9ebed;color:#16191f;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .user .u-role{color:#5f6b7a;font-size:12px}
+  .proto{font-size:11px;color:#8d6605;background:#fff7d6;border:1px solid #f2cd54;border-radius:4px;padding:2px 8px;letter-spacing:.04em;font-weight:700;white-space:nowrap}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 32px 64px}
+  .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f6b7a;margin-bottom:14px}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:27px;line-height:1.22;font-weight:700;letter-spacing:-.015em;margin:0 0 6px}
+  .lede{margin:0;font-size:14px;color:#5f6b7a;max-width:78ch}
+  .card{background:#fff;border:1px solid #e9ebed;border-radius:8px}
+  .pad{padding:20px 24px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5f6b7a}
+  .link{font-size:13px}
+  h2{font-size:16px;font-weight:700;margin:0}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:7px 18px;border-radius:20px;border:1px solid #c2c7ce;background:#fff;color:#16191f;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#f2f3f3;text-decoration:none}
+  .btn-primary{background:#0972d3;border-color:#0972d3;color:#fff}
+  .btn-primary:hover{background:#045bb0;border-color:#045bb0}
+  .btn-sm{padding:5px 12px;font-size:12px}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.35;padding:2px 9px;border-radius:12px;border:1px solid transparent;white-space:nowrap}
+  .bico{font-size:11px;line-height:1}
+  .b-ok{color:#1d8102;background:#f0f8ee;border-color:#cfe8c7}
+  .b-deny{color:#b02a1c;background:#fdf3f2;border-color:#f5cdc7}
+  .b-warn{color:#8d6605;background:#fff7d6;border-color:#f2cd54}
+  .b-info{color:#045bb0;background:#f0f7fd;border-color:#c9e0f5}
+  .b-gray{color:#5f6b7a;background:#f2f3f3;border-color:#c2c7ce}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:12px;background:#f2f3f3;border:1px solid #e9ebed;color:#5f6b7a;white-space:nowrap}
+
+  /* buscador */
+  .search{padding:18px 24px 20px;margin-bottom:16px}
+  .search-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .search-head p{margin:2px 0 0;font-size:12px;color:#5f6b7a}
+  .fields{display:grid;grid-template-columns:1.1fr 1fr 1fr .9fr 1fr 1fr;gap:12px;align-items:end}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a}
+  .field input,.field select{font:inherit;font-size:13px;color:#16191f;background:#fff;border:1px solid #c2c7ce;border-radius:6px;padding:7px 10px;min-height:34px;width:100%}
+  .field input::placeholder{color:#8d959f}
+  .field input:focus,.field select:focus{border-color:#0972d3;outline:2px solid #c9e0f5;outline-offset:0}
+  .field .hint{font-size:11px;color:#5f6b7a}
+  .search-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #e9ebed}
+  .search-foot .active{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:#5f6b7a}
+
+  /* resultados */
+  .res-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #e9ebed}
+  .res-head .count{font-size:13px;color:#5f6b7a}
+  .res-head .count b{color:#16191f;font-weight:600}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  caption{text-align:left;padding:0 20px 10px;font-size:12px;color:#5f6b7a}
+  thead th{background:#f2f3f3;color:#5f6b7a;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:9px 16px;border-bottom:1px solid #e9ebed;white-space:nowrap}
+  tbody td{padding:11px 16px;border-bottom:1px solid #e9ebed;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafbfb}
+  tbody tr.is-sel{background:#f5fafe;box-shadow:inset 3px 0 0 #0972d3}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tid{font-size:12px;white-space:nowrap}
+  .who{display:flex;flex-direction:column;line-height:1.3}
+  .who .role{font-size:11px;color:#5f6b7a}
+  .agent-cell{display:flex;flex-direction:column;line-height:1.3}
+  .agent-cell .sub{font-size:11px;color:#5f6b7a}
+  .rowbtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;background:none;border:0;padding:2px 0;color:#0972d3;cursor:pointer;font-family:inherit}
+
+  /* ruta forense */
+  .forensic{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+  .fr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid #e9ebed}
+  .fr-head h2{font-size:17px;letter-spacing:-.01em}
+  .fr-head .sub{margin:3px 0 0;font-size:12px;color:#5f6b7a}
+  .fr-sum{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 20px;padding:16px 22px;background:#fafbfb;border-bottom:1px solid #e9ebed}
+  .summary dt{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f6b7a;margin-bottom:1px}
+  .summary dd{margin:0;font-size:13px}
+
+  .steps{list-style:none;margin:0;padding:8px 22px 18px;position:relative}
+  .step{display:grid;grid-template-columns:78px 26px minmax(0,1fr);gap:0 12px;padding:12px 0;position:relative}
+  .step + .step{border-top:1px solid #f2f3f3}
+  .step time{font-size:11px;color:#5f6b7a;padding-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rail{position:relative;display:flex;justify-content:center}
+  .rail::before{content:"";position:absolute;top:22px;bottom:-14px;left:50%;border-left:1px solid #d5d9dd}
+  .step:last-child .rail::before{display:none}
+  .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:#fff;border:1px solid #c2c7ce;color:#5f6b7a;position:relative;z-index:1;line-height:1;flex:none}
+  .dot.ok{background:#f0f8ee;border-color:#8fc97b;color:#1d8102}
+  .dot.warn{background:#fff7d6;border-color:#f2cd54;color:#8d6605}
+  .dot.deny{background:#fdf3f2;border-color:#e39b90;color:#b02a1c}
+  .dot.neutral{background:#f2f3f3;border-color:#c2c7ce;color:#5f6b7a}
+  .step-body{min-width:0}
+  .step-title{font-size:13px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .step-title .late{font-weight:400;font-size:12px;color:#5f6b7a}
+  .step-body p{margin:2px 0 0;font-size:12px;color:#5f6b7a;word-break:break-word}
+  .step-body .ver{font-size:11px;font-weight:600;padding:0 5px;border:1px solid #e9ebed;border-radius:4px;background:#f2f3f3;color:#5f6b7a}
+  .src{display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;color:#5f6b7a}
+  .src .k{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+
+  /* sello */
+  .seal{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden}
+  .seal-top{padding:16px 20px;border-bottom:1px solid #e9ebed;display:flex;align-items:center;gap:10px}
+  .lock{width:30px;height:30px;border-radius:6px;background:#f0f8ee;border:1px solid #cfe8c7;display:grid;place-items:center;font-size:14px;color:#1d8102;flex:none}
+  .seal-top h2{font-size:14px}
+  .seal-body{padding:16px 20px}
+  .seal-line{font-size:13px;font-weight:600;margin:0 0 3px}
+  .seal-body p{margin:0;font-size:12px;color:#5f6b7a}
+  .kv{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .kv li{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding-bottom:9px;border-bottom:1px solid #f2f3f3}
+  .kv li:last-child{border-bottom:0;padding-bottom:0}
+  .kv .k{color:#5f6b7a}
+  .kv .v{text-align:right;font-weight:600;word-break:break-word}
+  .seal-foot{padding:14px 20px;border-top:1px solid #e9ebed;background:#fafbfb;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  .seal-foot .note{font-size:11px;color:#5f6b7a}
+
+  .rule{display:flex;flex-direction:column;gap:0}
+  .rule-body{padding:14px 20px}
+  .rule-name{font-size:14px;font-weight:700;margin:0}
+  .rule-meta{margin:6px 0 0;font-size:12px;color:#5f6b7a}
+  .rule-meta .mono{font-size:11px}
+  .chg{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid #f2f3f3}
+  .chg li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px solid #f2f3f3;font-size:12px}
+  .chg li:last-child{border-bottom:0;padding-bottom:0}
+  .chg .v{font-weight:600}
+  .chg .t{color:#5f6b7a;font-variant-numeric:tabular-nums}
+  .chg .d{color:#5f6b7a;font-size:11px;display:block}
+
+  .foot{margin-top:30px;border-top:1px solid #e9ebed;padding-top:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f6b7a}
+
+  @media (max-width:1180px){
+    .fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  @media (max-width:1080px){
+    .topbar-in{padding:0 20px;min-height:48px}
+    .topbar-in > .brand,.topbar-in > .topbar-right{min-height:48px}
+    .nav{order:3;width:100%;margin-left:0;overflow-x:auto;border-top:1px solid #e9ebed}
+    .nav a,.nav .nav-off{padding:10px 8px 9px}
+    .topbar-right{margin-left:auto;border-left:0;padding-left:0}
+    .wrap{padding:18px 20px 56px}
+    .forensic{grid-template-columns:1fr}
+    .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:900px){
+    h1{font-size:23px}
+    .fields{grid-template-columns:1fr 1fr}
+    .step{grid-template-columns:24px minmax(0,1fr);gap:0 10px}
+    .step time{grid-column:1 / -1;grid-row:1;padding:0 0 4px 0}
+    .step .rail{grid-column:1;grid-row:2}
+    .step-body{grid-column:2 / -1;grid-row:2}
+    .pad,.search{padding:16px 16px}
+    .fr-head,.summary{padding:14px 16px}
+    .steps{padding:6px 16px 14px}
+    .res-head{padding:14px 16px}
+    .seal-body,.seal-top,.seal-foot,.rule-body{padding-left:16px;padding-right:16px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" focusable="false">
+        <path d="M9 1 16.5 3.6v6.2c0 4.2-2.9 7.6-7.5 9.2C4.4 17.4 1.5 14 1.5 9.8V3.6L9 1Z" fill="none" stroke="#16191f" stroke-width="1.6"/>
+        <path d="M9 6.2v4.6M9 13.6v.6" stroke="#16191f" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>Gobernanza de agentes</span>
+    </div>
+
+    <nav class="nav" aria-label="Secciones de la consola">
+      <a href="tarjeta-gobernanza.html">Agentes</a>
+      <span class="nav-off" title="No forma parte de esta propuesta">Flujo en vivo</span>
+      <a href="aprobaciones.html">Aprobaciones</a>
+      <a href="auditoria.html" aria-current="page">Auditoría</a>
+      <a href="consumo-limites.html">Consumo</a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">CR</span>
+        <span>Camila Rojas <span class="u-role">· auditora</span></span>
+      </div>
+      <span class="proto">PROPUESTA · no construido</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <nav class="crumbs" aria-label="Ruta de navegación">
+    <span>Auditoría</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>¿Cómo llego a la causa?</h1>
+      <p class="lede">De la transacción a la regla vigente y su evidencia sellada.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;padding-top:6px">
+      <a class="btn" href="#">Exportar CSV</a>
+    </div>
+  </div>
+
+  <section class="card search" aria-labelledby="search-title">
+    <div class="search-head">
+      <div>
+        <h2 id="search-title">Buscar en la evidencia</h2>
+      </div>
+      <span class="tiny" style="color:#5f6b7a">Retención: 2025-11-03 → 2026-11-03</span>
+    </div>
+
+    <form action="#" method="get">
+      <div class="fields">
+        <div class="field">
+          <label for="q-trace">trace_id</label>
+          <input id="q-trace" name="trace_id" type="text" value="tr-8f21" class="mono" autocomplete="off" spellcheck="false">
+          <span class="hint">Exacta</span>
+        </div>
+        <div class="field">
+          <label for="q-user">Usuario</label>
+          <input id="q-user" name="usuario" type="text" placeholder="nombre o correo" autocomplete="off">
+          <span class="hint">Cualquiera</span>
+        </div>
+        <div class="field">
+          <label for="q-agent">Agente</label>
+          <select id="q-agent" name="agente">
+            <option value="">Todos los agentes</option>
+            <option value="atencion-clientes" selected>atencion-clientes</option>
+            <option value="analisis-financiero">analisis-financiero</option>
+            <option value="operaciones-batch">operaciones-batch</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="q-status">Estado</label>
+          <select id="q-status" name="estado">
+            <option value="">Todos los estados</option>
+            <option value="permitido">Permitido</option>
+            <option value="denegado">Denegado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="filtrado">Filtrado</option>
+            <option value="shadow">En sombra</option>
+            <option value="fuera">Fuera de la puerta</option>
+          </select>
+          <span class="hint">Registrada</span>
+        </div>
+        <div class="field">
+          <label for="q-from">Desde (UTC)</label>
+          <input id="q-from" name="desde" type="date" value="2026-11-03">
+          <span class="hint">00:00</span>
+        </div>
+        <div class="field">
+          <label for="q-to">Hasta (UTC)</label>
+          <input id="q-to" name="hasta" type="date" value="2026-11-03">
+          <span class="hint">23:59</span>
+        </div>
+      </div>
+
+      <div class="search-foot">
+        <div class="active">
+          <span class="chip">agente: atencion-clientes</span>
+          <span class="chip">trace_id: tr-8f21</span>
+          <span class="chip">fecha: 2026-11-03</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" type="reset">Limpiar</button>
+          <button class="btn btn-primary" type="submit">Buscar</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="res-title">
+    <div class="res-head">
+      <div>
+        <h2 id="res-title">Resultados</h2>
+        <p class="count" style="margin:2px 0 0"><b>5 transacciones</b> · 2026-11-03 · recientes primero</p>
+      </div>
+      <span class="chip"><span aria-hidden="true">🔒</span>5 de 5 con evidencia sellada</span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <caption>Costo a tarifa vigente.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Hora (UTC)</th>
+            <th scope="col">trace_id</th>
+            <th scope="col">Agente</th>
+            <th scope="col">Usuario</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="num">Costo</th>
+            <th scope="col">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">14:32:08</td>
+            <td class="mono tid">tr-9c04</td>
+            <td><span class="agent-cell">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="who">Elena Soto<span class="role">aprobadora</span></span></td>
+            <td><span class="badge b-warn"><span class="bico" aria-hidden="true">⚠</span>Filtrado · 1 dato personal</span></td>
+            <td class="num mono">$ 0,031</td>
+            <td><button class="rowbtn" type="button">Abrir <span aria-hidden="true">→</span></button></td>
+          </tr>
+          <tr class="is-sel">
+            <td class="mono">14:29:51</td>
+            <td class="mono tid">tr-8f21</td>
+            <td><span class="agent-cell">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="who">Bruno Contreras<span class="role">operador · token OK</span></span></td>
+            <td><span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitido</span></td>
+            <td class="num mono">$ 0,048</td>
+            <td><button class="rowbtn" type="button" aria-expanded="true" aria-controls="fr-title">Abierta <span aria-hidden="true">↓</span></button></td>
+          </tr>
+          <tr>
+            <td class="mono">14:27:12</td>
+            <td class="mono tid">tr-7b6e</td>
+            <td><span class="agent-cell">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="who">Bruno Contreras<span class="role">operador · token OK</span></span></td>
+            <td><span class="badge b-deny"><span class="bico" aria-hidden="true">⊘</span>Denegado</span></td>
+            <td class="num mono">$ 0,000</td>
+            <td><button class="rowbtn" type="button">Abrir <span aria-hidden="true">→</span></button></td>
+          </tr>
+          <tr>
+            <td class="mono">14:21:40</td>
+            <td class="mono tid">tr-6a12</td>
+            <td><span class="agent-cell">atencion-clientes<span class="sub">v1.4</span></span></td>
+            <td><span class="who">Sin usuario<span class="role">solo_workload</span></span></td>
+            <td><span class="badge b-gray"><span class="bico" aria-hidden="true">⊘</span>Fuera de la puerta</span></td>
+            <td class="num mono">$ 0,019</td>
+            <td><button class="rowbtn" type="button">Abrir <span aria-hidden="true">→</span></button></td>
+          </tr>
+          <tr>
+            <td class="mono">14:18:03</td>
+            <td class="mono tid">tr-5d90</td>
+            <td><span class="agent-cell">analisis-financiero<span class="sub">v0.9</span></span></td>
+            <td><span class="who">Diego Ruiz<span class="role">operador · token OK</span></span></td>
+            <td><span class="badge b-info"><span class="bico" aria-hidden="true">⏱</span>Pendiente</span></td>
+            <td class="num mono">$ 0,073</td>
+            <td><button class="rowbtn" type="button">Abrir <span aria-hidden="true">→</span></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="forensic">
+    <section class="card" aria-labelledby="fr-title">
+      <div class="fr-head">
+        <div>
+          <span class="eyebrow">Ruta forense</span>
+          <h2 id="fr-title" class="mono" style="font-size:17px;margin-top:2px">tr-8f21</h2>
+          <p class="sub">1 turno · 2 solicitudes · 1 tool · 4.812 tokens · $ 0,048</p>
+          <div class="fr-sum">
+            <span class="badge b-ok"><span class="bico" aria-hidden="true">✓</span>Permitido</span>
+            <span class="chip">Conexión A + C</span>
+            <span class="chip">B parcial · tool por puerta</span>
+          </div>
+        </div>
+        <a class="btn btn-sm" href="#">Ver JSON</a>
+      </div>
+
+      <dl class="summary">
+        <div><dt>Quién</dt><dd>Bruno Contreras · operador</dd></div>
+        <div><dt>Agente</dt><dd>atencion-clientes v1.4</dd></div>
+        <div><dt>Regla determinante</dt><dd>descuento ≤ 10 · v3</dd></div>
+        <div><dt>Resultado</dt><dd>Descuento 8 aplicado</dd></div>
+      </dl>
+
+      <ol class="steps">
+        <li class="step">
+          <time datetime="2026-11-03T14:29:51Z">14:29:51,204</time>
+          <div class="rail"><span class="dot neutral" aria-hidden="true">1</span></div>
+          <div class="step-body">
+            <p class="step-title">Entra la solicitud</p>
+            <p>Cuenta 0042-1 · token <span class="mono">X-Gov-User-Token</span> validado.</p>
+            <span class="src"><span class="k">Fuente</span> · <span class="mono">ev-2211</span> · CTRL-26</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:51Z">14:29:51,318</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Autenticación del agente <span class="ver">CTRL-01</span></p>
+            <p><span class="mono">agent_token</span> v1.4 válido; sin credenciales del proveedor.</p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW · 2 ms</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:51Z">14:29:51,402</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Guardrail del turno <span class="ver">CTRL-05</span></p>
+            <p>Sin inyección ni fuga.</p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW · guardrail v7 · 31 ms</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:51Z">14:29:51,436</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Modelo permitido <span class="ver">CTRL-03</span></p>
+            <p><span class="mono">claude-3-5-sonnet</span> · $ 3,00/M entrada · tarifa <span class="mono">2026-09-01</span>.</p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW · 3 ms</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:52Z">14:29:52,007</time>
+          <div class="rail"><span class="dot warn" aria-hidden="true">⚠</span></div>
+          <div class="step-body">
+            <p class="step-title">El modelo emite un <span class="mono">tool_call</span> <span class="ver">CTRL-07</span></p>
+            <p><span class="mono">aplicar_descuento</span> · <span class="mono">descuento = 8</span> · <span class="mono">cuenta = 0042-1</span></p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW en intención</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:52Z">14:29:52,061</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Regla sobre la ejecución real <span class="ver">CTRL-14</span></p>
+            <p><b>descuento ≤ 10</b> · v3 · <span class="mono">descuento = 8</span> · vigente, no la actual.</p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW · 6 ms</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:52Z">14:29:52,114</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Tool por MCP con credencial <span class="ver">CTRL-13</span></p>
+            <p><span class="mono">crm-core</span> · <span class="mono">200</span> · <span class="mono">descuento_aplicado: 8</span> · credencial de bóveda.</p>
+            <span class="src"><span class="k">Fuente</span> · <span class="mono">ev-2218</span> · 187 ms</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:52Z">14:29:52,388</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Respuesta enmascarada <span class="ver">CTRL-06</span></p>
+            <p>RUT y teléfono enmascarados.</p>
+            <span class="src"><span class="k">Decisión</span> · ALLOW · 2 datos</span>
+          </div>
+        </li>
+
+        <li class="step">
+          <time datetime="2026-11-03T14:29:52Z">14:29:52,401</time>
+          <div class="rail"><span class="dot ok" aria-hidden="true">✓</span></div>
+          <div class="step-body">
+            <p class="step-title">Evidencia sellada <span class="ver">CTRL-11</span></p>
+            <p>Registro durable + S3 Object Lock.</p>
+            <span class="src"><span class="k">Resultado</span> · Permitido · $ 0,048 · 4.812 tokens</span>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <aside style="display:flex;flex-direction:column;gap:14px">
+      <section class="card seal" aria-labelledby="seal-title">
+        <div class="seal-top">
+          <span class="lock" aria-hidden="true">🔒</span>
+          <div>
+            <h2 id="seal-title">Evidencia inmutable</h2>
+            <span class="tiny" style="color:#5f6b7a">Sello verificado</span>
+          </div>
+        </div>
+        <div class="seal-body">
+          <p class="seal-line">Evidencia sellada hasta 2027-11-03</p>
+          <p>S3 Object Lock · modo <b>GOVERNANCE</b> · bucket <span class="mono">morris-opazo-evidence-prod</span></p>
+          <ul class="kv">
+            <li><span class="k">Objetos</span><span class="v mono">9 eventos · 1 objeto</span></li>
+            <li><span class="k">Retención</span><span class="v">1 año</span></li>
+            <li><span class="k">Hash del objeto</span><span class="v mono" style="font-size:11px">sha256:4c1f…a7b2</span></li>
+            <li><span class="k">Sellado</span><span class="v mono">14:29:52,401 UTC</span></li>
+          </ul>
+        </div>
+        <div class="seal-foot">
+          <a class="btn btn-sm" href="#">Probar inmutabilidad</a>
+          <span class="note">Al borrar, S3 rechaza la operación.</span>
+        </div>
+      </section>
+
+      <section class="card rule" aria-labelledby="rule-title">
+        <div class="seal-top" style="border-bottom:0;padding-bottom:6px">
+          <div>
+            <h2 id="rule-title">Regla y su historial</h2>
+            <span class="tiny" style="color:#5f6b7a">Cambios de umbral</span>
+          </div>
+        </div>
+        <div class="rule-body" style="padding-top:6px">
+          <p class="rule-name">Regla descuento ≤ 10</p>
+          <p class="rule-meta"><b>v3</b> · modificada por <b>m.perez</b> el <span class="mono">2026-10-30 11:04 UTC</span></p>
+          <ul class="chg">
+            <li>
+              <span class="t mono">11:04</span>
+              <span><span class="v">v3 · umbral 12 → 10</span><span class="d">m.perez · operadora · aprob. e.soto</span></span>
+            </li>
+            <li>
+              <span class="t mono">10-14</span>
+              <span><span class="v">v2 · umbral 15 → 12</span><span class="d">d.ruiz · operador · aprob. e.soto</span></span>
+            </li>
+            <li>
+              <span class="t mono">09-02</span>
+              <span><span class="v">v1 · creación, umbral 15</span><span class="d">m.perez · operadora</span></span>
+            </li>
+          </ul>
+          <p style="margin:12px 0 0"><a class="link" href="#">Ver diff de v2 a v3 →</a></p>
+        </div>
+      </section>
+
+      <section class="card pad">
+        <h2 style="font-size:14px">Huecos de esta transacción</h2>
+        <p style="margin:6px 0 0;font-size:12px;color:#5f6b7a">Ninguno. Las 5 tools fuera de MCP son de otras transacciones.</p>
+        <p style="margin:8px 0 0"><a class="link" href="tarjeta-gobernanza.html">Ver tarjeta del agente →</a></p>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Maqueta · datos sintéticos de Morris y Opazo.</span>
+    <span>2026-11-03 · horas UTC</span>
+  </footer>
+</main>
+</body>
+</html>
